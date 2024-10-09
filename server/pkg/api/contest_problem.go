@@ -30,22 +30,13 @@ func (a *ContestProblemAPI) Get(c *gin.Context) {
 
 // Create 创建新的比赛问题
 func (a *ContestProblemAPI) Create(c *gin.Context) {
-	var item schema.Contest_ProblemItem
-	if err := c.ShouldBindJSON(&item); err != nil {
+	var item *schema.ContestProblemItem
+	if err := c.ShouldBindJSON(item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
 
-	dbItem := schema.Contest_ProblemDBItem{
-		Problem_ID: item.Problem_ID,
-		Contest_ID: item.Contest_ID,
-		Title:      item.Title,
-		Num:        item.Num,
-		Accepted:   item.Accepted,
-		Submit:     item.Submit,
-	}
-
-	if err := contestProblemSvc.Create(&dbItem); err != nil {
+	if _, err := contestProblemSvc.Create(item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -54,22 +45,13 @@ func (a *ContestProblemAPI) Create(c *gin.Context) {
 
 // Update 更新指定ID的比赛问题信息
 func (a *ContestProblemAPI) Update(c *gin.Context) {
-	var item schema.Contest_ProblemItem
-	if err := c.ShouldBindJSON(&item); err != nil {
+	var item *schema.ContestProblemItem
+	if err := c.ShouldBindJSON(item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
 
-	dbItem := schema.Contest_ProblemDBItem{
-		Problem_ID: item.Problem_ID,
-		Contest_ID: item.Contest_ID,
-		Title:      item.Title,
-		Num:        item.Num,
-		Accepted:   item.Accepted,
-		Submit:     item.Submit,
-	}
-
-	if err := contestProblemSvc.Update(item.Problem_ID, &dbItem); err != nil {
+	if err := contestProblemSvc.Update(item.ID, item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
