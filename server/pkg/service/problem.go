@@ -1,14 +1,17 @@
 package service
 
 import (
-	"errors"
+	"context"
+
+	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type ProblemServiceInterface interface {
-	Get(id int) (schema.ProblemItem, error)
-	Create(item *schema.ProblemDBItem) error
-	Update(id int, item *schema.ProblemDBItem) error
+	Query(params schema.ProblemParams) (schema.ProblemItems, error)
+	Get(id int) (*schema.ProblemItem, error)
+	Create(item *schema.ProblemItem) (int, error)
+	Update(id int, item *schema.ProblemItem) error
 	Delete(id int) error
 }
 
@@ -16,46 +19,59 @@ var ProblemServiceInstance ProblemServiceInterface = &ProblemService{}
 
 type ProblemService struct{}
 
-// 模拟数据库
-var problemDB = map[int]schema.ProblemDBItem{}
-
-// Get 获取问题
-func (a *ProblemService) Get(id int) (schema.ProblemItem, error) {
-	problem, exists := problemDB[id]
-	if !exists {
-		return schema.ProblemItem{}, errors.New("问题未找到")
+// Query 获取比赛信息列表
+func (a *ProblemService) Query(params schema.ProblemParams) (schema.ProblemItems, error) {
+	db := global.DB.WithContext(context.Background())
+	if params.Title != "" {
+		db.Where("title = ?", params.Title)
 	}
-	return schema.ProblemItem(problem), nil
+
+	var items schema.ProblemDBItems
+	err := db.Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return items.ToItems(), nil
 }
 
-// Create 创建新问题
-func (a *ProblemService) Create(item *schema.ProblemDBItem) error {
-	// 假设数据库ID是递增的，这里简单模拟一下
-	newID := len(problemDB) + 1
-	item.ID = newID
-	problemDB[newID] = *item
+// Get 通过ID从数据库获取题目
+func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
+	db := global.DB.WithContext(context.Background())
+	var item *schema.ProblemDBItem
+	err := db.Where("id = ?", id).First(item).Error
+	if err != nil {
+		return nil, err
+	}
+	return item.ToItem(), nil
+}
+
+// Create 将 ProblemItem 转换为 ProblemDBItem 并存入数据库
+func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
+	db := global.DB.WithContext(context.Background())
+	err := db.Create(item.ToDBItem()).Error
+	if err != nil {
+		return 0, err
+	}
+	return item.ID, nil
+}
+
+// Update 更新题目信息
+func (a *ProblemService) Update(id int, item *schema.ProblemItem) error {
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// Update 更新指定ID的问题
-func (a *ProblemService) Update(id int, item *schema.ProblemDBItem) error {
-	_, exists := problemDB[id]
-	if !exists {
-		return errors.New("问题未找到")
-	}
-	// 更新问题
-	item.ID = id
-	problemDB[id] = *item
-	return nil
-}
-
-// Delete 删除指定ID的问题
+// Delete 根据ID删除题目
 func (a *ProblemService) Delete(id int) error {
-	_, exists := problemDB[id]
-	if !exists {
-		return errors.New("问题未找到")
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{}).Error
+	if err != nil {
+		return err
 	}
-	// 从数据库删除问题
-	delete(problemDB, id)
 	return nil
 }

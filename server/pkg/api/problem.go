@@ -9,7 +9,7 @@ import (
 
 type ProblemAPI struct{}
 
-// Get 获取指定ID的问题
+// Get 获取题目信息
 func (a *ProblemAPI) Get(c *gin.Context) {
 	var id schema.ID
 	if err := c.ShouldBind(&id); err != nil {
@@ -25,7 +25,7 @@ func (a *ProblemAPI) Get(c *gin.Context) {
 	ginx.ResSuccess(c, item)
 }
 
-// Create 创建新问题
+// Create 创建题目，传递给 service 层时使用 Item 类型
 func (a *ProblemAPI) Create(c *gin.Context) {
 	var item schema.ProblemItem
 	if err := c.ShouldBindJSON(&item); err != nil {
@@ -33,21 +33,14 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	dbItem := schema.ProblemDBItem{
-		Title:       item.Title,
-		Description: item.Description,
-		Input:       item.Input,
-		Output:      item.Output,
-	}
-
-	if err := problemSvc.Create(&dbItem); err != nil {
+	if _,err := problemSvc.Create(&item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
 	ginx.ResSuccess(c, "创建成功")
 }
 
-// Update 更新指定ID的问题
+// Update 更新题目
 func (a *ProblemAPI) Update(c *gin.Context) {
 	var item schema.ProblemItem
 	if err := c.ShouldBindJSON(&item); err != nil {
@@ -55,22 +48,14 @@ func (a *ProblemAPI) Update(c *gin.Context) {
 		return
 	}
 
-	dbItem := schema.ProblemDBItem{
-		ID:          item.ID,
-		Title:       item.Title,
-		Description: item.Description,
-		Input:       item.Input,
-		Output:      item.Output,
-	}
-
-	if err := problemSvc.Update(dbItem.ID, &dbItem); err != nil {
+	if err := problemSvc.Update(item.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
 	ginx.ResSuccess(c, "更新成功")
 }
 
-// Delete 删除指定ID的问题
+// Delete 删除题目
 func (a *ProblemAPI) Delete(c *gin.Context) {
 	var id schema.ID
 	if err := c.ShouldBind(&id); err != nil {

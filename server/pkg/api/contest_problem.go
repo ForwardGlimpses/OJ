@@ -45,13 +45,13 @@ func (a *ContestProblemAPI) Create(c *gin.Context) {
 
 // Update 更新指定ID的比赛问题信息
 func (a *ContestProblemAPI) Update(c *gin.Context) {
-	var item *schema.ContestProblemItem
+	var item schema.ContestProblemItem
 	if err := c.ShouldBindJSON(item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
 
-	if err := contestProblemSvc.Update(item.ID, item); err != nil {
+	if err := contestProblemSvc.Update(item.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

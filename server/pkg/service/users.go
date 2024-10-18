@@ -1,14 +1,17 @@
 package service
 
 import (
-	"errors"
+	"context"
+
+	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type UsersServiceInterface interface {
-	Get(id int) (schema.UsersItem, error)
-	Create(item *schema.UsersDBItem) error
-	Update(id int, item *schema.UsersDBItem) error
+	Get(id int) (*schema.UsersItem, error)
+	Query(params schema.UsersParams) (schema.UsersItems, error)
+	Create(item *schema.UsersItem) (int, error)
+	Update(id int, item *schema.UsersItem) error
 	Delete(id int) error
 }
 
@@ -16,50 +19,59 @@ var UsersServiceInstance UsersServiceInterface = &UsersService{}
 
 type UsersService struct{}
 
-// 模拟数据库
-var usersDB = map[int]schema.UsersDBItem{}
-
-// Get 获取用户信息
-func (a *UsersService) Get(id int) (schema.UsersItem, error) {
-	user, exists := usersDB[id]
-	if !exists {
-		return schema.UsersItem{}, errors.New("用户未找到")
+// Query 获取用户信息列表
+func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, error) {
+	db := global.DB.WithContext(context.Background())
+	if params.Email != "" {
+		db.Where("email = ?", params.Email)
 	}
 
-	// 类型转换
-	return schema.UsersItem(user), nil
+	var items schema.UsersDBItems
+	err := db.Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return items.ToItems(), nil
 }
 
-// Create 创建新用户
-func (a *UsersService) Create(item *schema.UsersDBItem) error {
-	// 模拟生成新用户ID
-	newID := len(usersDB) + 1
-	item.User_ID = newID
-	usersDB[newID] = *item
-	return nil
+// Get 获取用户信息
+func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
+	db := global.DB.WithContext(context.Background())
+	var item *schema.UsersDBItem
+	err := db.Where("user_id = ?", id).First(item).Error
+	if err != nil {
+		return nil, err
+	}
+	return item.ToItem(), nil
+}
+
+// Create 创建用户
+func (a *UsersService) Create(item *schema.UsersItem) (int, error) {
+	db := global.DB.WithContext(context.Background())
+	err := db.Create(item.ToDBItem()).Error
+	if err != nil {
+		return 0, err
+	}
+	return item.ID, nil
 }
 
 // Update 更新用户信息
-func (a *UsersService) Update(id int, item *schema.UsersDBItem) error {
-	_, exists := usersDB[id]
-	if !exists {
-		return errors.New("用户未找到")
+func (a *UsersService) Update(id int, item *schema.UsersItem) error {
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("user_id = ?", id).Updates(item.ToDBItem()).Error
+	if err != nil {
+		return err
 	}
-
-	// 更新用户信息
-	item.User_ID = id
-	usersDB[id] = *item
 	return nil
 }
 
 // Delete 删除用户
 func (a *UsersService) Delete(id int) error {
-	_, exists := usersDB[id]
-	if !exists {
-		return errors.New("用户未找到")
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("user_id = ?", id).Delete(&schema.UsersDBItem{}).Error
+	if err != nil {
+		return err
 	}
-
-	// 删除用户
-	delete(usersDB, id)
 	return nil
 }

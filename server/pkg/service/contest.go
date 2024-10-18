@@ -1,14 +1,17 @@
 package service
 
 import (
-	"errors"
+	"context"
+
+	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type ContestServiceInterface interface {
-	Get(id int) (schema.ContestItem, error)
-	Create(item *schema.ContestDBItem) error
-	Update(id int, item *schema.ContestDBItem) error
+	Query(params schema.ContestParams) (schema.ContestItems, error)
+	Get(id int) (*schema.ContestItem, error)
+	Create(item *schema.ContestItem) (int, error)
+	Update(id int, item *schema.ContestItem) error
 	Delete(id int) error
 }
 
@@ -16,50 +19,59 @@ var ContestServiceInstance ContestServiceInterface = &ContestService{}
 
 type ContestService struct{}
 
-// 模拟数据库
-var contestDB = map[int]schema.ContestDBItem{}
+// Query 获取比赛信息列表
+func (a *ContestService) Query(params schema.ContestParams) (schema.ContestItems, error) {
+	db := global.DB.WithContext(context.Background())
+	if params.Title != "" {
+		db.Where("title = ?", params.Title)
+	}
+
+	var items schema.ContestDBItems
+	err := db.Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return items.ToItems(), nil
+}
 
 // Get 获取比赛信息
-func (a *ContestService) Get(id int) (schema.ContestItem, error) {
-	item, exists := contestDB[id]
-	if !exists {
-		return schema.ContestItem{}, errors.New("比赛未找到")
+func (a *ContestService) Get(id int) (*schema.ContestItem, error) {
+	db := global.DB.WithContext(context.Background())
+	var item *schema.ContestDBItem
+	err := db.Where("id = ?", id).First(item).Error
+	if err != nil {
+		return nil, err
 	}
-
-	// 类型转换
-	return schema.ContestItem(item), nil
+	return item.ToItem(), nil
 }
 
-// Create 创建新的比赛
-func (a *ContestService) Create(item *schema.ContestDBItem) error {
-	// 模拟生成新比赛ID
-	newID := len(contestDB) + 1
-	item.Contest_ID = newID
-	contestDB[newID] = *item
-	return nil
+// Create 创建比赛
+func (a *ContestService) Create(item *schema.ContestItem) (int, error) {
+	db := global.DB.WithContext(context.Background())
+	err := db.Create(item.ToDBItem()).Error
+	if err != nil {
+		return 0, err
+	}
+	return item.ID, nil
 }
 
-// Update 更新比赛信息
-func (a *ContestService) Update(id int, item *schema.ContestDBItem) error {
-	_, exists := contestDB[id]
-	if !exists {
-		return errors.New("比赛未找到")
+// Update 更新比赛
+func (a *ContestService) Update(id int, item *schema.ContestItem) error {
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+	if err != nil {
+		return err
 	}
-
-	// 更新比赛信息
-	item.Contest_ID = id
-	contestDB[id] = *item
 	return nil
 }
 
 // Delete 删除比赛
 func (a *ContestService) Delete(id int) error {
-	_, exists := contestDB[id]
-	if !exists {
-		return errors.New("比赛未找到")
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Delete(&schema.ContestDBItem{}).Error
+	if err != nil {
+		return err
 	}
-
-	// 删除比赛
-	delete(contestDB, id)
 	return nil
 }

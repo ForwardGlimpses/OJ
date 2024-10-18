@@ -1,14 +1,17 @@
 package service
 
 import (
-	"errors"
+	"context"
+
+	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type SolutionServiceInterface interface {
-	Get(id int) (schema.SolutionItem, error)
-	Create(item *schema.SolutionDBItem) error
-	Update(id int, item *schema.SolutionDBItem) error
+	Get(id int) (*schema.SolutionItem, error)
+	Query(params schema.SolutionParams) (schema.SolutionItems, error)
+	Create(item *schema.SolutionItem) (int, error)
+	Update(id int, item *schema.SolutionItem) error
 	Delete(id int) error
 }
 
@@ -16,50 +19,59 @@ var SolutionServiceInstance SolutionServiceInterface = &SolutionService{}
 
 type SolutionService struct{}
 
-// 模拟数据库
-var solutionDB = map[int]schema.SolutionDBItem{}
-
-// Get 获取解决方案信息
-func (a *SolutionService) Get(id int) (schema.SolutionItem, error) {
-	item, exists := solutionDB[id]
-	if !exists {
-		return schema.SolutionItem{}, errors.New("解决方案未找到")
+// Query 获取解题方案列表
+func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionItems, error) {
+	db := global.DB.WithContext(context.Background())
+	if params.UserID != "" {
+		db.Where("user_id = ?", params.UserID)
 	}
 
-	// 类型转换
-	return schema.SolutionItem(item), nil
+	var items schema.SolutionDBItems
+	err := db.Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return items.ToItems(), nil
 }
 
-// Create 创建新的解决方案
-func (a *SolutionService) Create(item *schema.SolutionDBItem) error {
-	// 模拟生成新解决方案ID
-	newID := len(solutionDB) + 1
-	item.Solution_ID = newID
-	solutionDB[newID] = *item
+// Get 获取解题方案
+func (a *SolutionService) Get(id int) (*schema.SolutionItem, error) {
+	db := global.DB.WithContext(context.Background())
+	var item *schema.SolutionDBItem
+	err := db.Where("id = ?", id).First(item).Error
+	if err != nil {
+		return nil, err
+	}
+	return item.ToItem(), nil
+}
+
+// Create 创建解题方案
+func (a *SolutionService) Create(item *schema.SolutionItem) (int, error) {
+	db := global.DB.WithContext(context.Background())
+	err := db.Create(item.ToDBItem()).Error
+	if err != nil {
+		return 0, err
+	}
+	return item.ID, nil
+}
+
+// Update 更新解题方案
+func (a *SolutionService) Update(id int, item *schema.SolutionItem) error {
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// Update 更新解决方案信息
-func (a *SolutionService) Update(id int, item *schema.SolutionDBItem) error {
-	_, exists := solutionDB[id]
-	if !exists {
-		return errors.New("解决方案未找到")
-	}
-
-	// 更新解决方案信息
-	item.Solution_ID = id
-	solutionDB[id] = *item
-	return nil
-}
-
-// Delete 删除解决方案
+// Delete 删除解题方案
 func (a *SolutionService) Delete(id int) error {
-	_, exists := solutionDB[id]
-	if !exists {
-		return errors.New("解决方案未找到")
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Delete(&schema.SolutionDBItem{}).Error
+	if err != nil {
+		return err
 	}
-
-	// 删除解决方案
-	delete(solutionDB, id)
 	return nil
 }
