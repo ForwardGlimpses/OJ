@@ -1,7 +1,10 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json" // 导入 json 包
+	"io"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -13,6 +16,8 @@ type ProblemServiceInterface interface {
 	Create(item *schema.ProblemItem) (int, error)
 	Update(id int, item *schema.ProblemItem) error
 	Delete(id int) error
+	//TODO 提交 判断 存储提交结果 返回提交结果id给前端 前端拿提交的id来查询status
+	Submit(id int, userId string, input string) (int, error)
 }
 
 var ProblemServiceInstance ProblemServiceInterface = &ProblemService{}
@@ -74,4 +79,78 @@ func (a *ProblemService) Delete(id int) error {
 		return err
 	}
 	return nil
+}
+
+func (a *ProblemService) Submit(id int, userId string, input string) (int, error) {
+
+	db := global.DB.WithContext(context.Background())
+
+	// Step 1: 获取题目详细信息
+	problem, err := a.Get(id)
+	if err != nil {
+		return 0, err
+	}
+
+	// Step 2: 准备发送给 Judge 的请求体
+	judgeRequest := map[string]interface{}{
+		"problem_id": id,
+		"user_id":    userId,
+		"input":      input,
+		"output":     problem.Output, // 假设 ProblemItem 有字段 ExpectedOutput
+	}
+
+	// Step 3: 发送请求到 Judge 系统
+	body, err := marshalToReader(judgeRequest)
+	if err != nil {
+		return 0, err
+	}
+	
+	resp, err := global.HttpClient.Post("http://judge-system/submit", "application/json", body)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	// Step 4: 解析 Judge 系统返回的结果
+	var judgeResponse struct {
+		Status   string `json:"status"`
+		Output   string `json:"output"`
+		ErrorMsg string `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&judgeResponse); err != nil {
+		return 0, err
+	}
+
+	// Step 5: 对比评测结果和标准答案
+	isCorrect := judgeResponse.Output == problem.Output
+	status := "Accepted"
+	if !isCorrect {
+		status = "Wrong Answer"
+	}
+
+	// Step 6: 将评测结果存储到数据库
+	submission := &schema.Submission{
+		ProblemID: id,
+		UserID:    userId,
+		Input:     input,
+		Output:    judgeResponse.Output,
+		Status:    status,
+		ErrorMsg:  judgeResponse.ErrorMsg,
+	}
+	err = db.Create(submission).Error
+	if err != nil {
+		return 0, err
+	}
+
+	// Step 7: 返回提交记录的 ID
+	return submission.ID, nil
+}
+
+// 将结构体编码成 JSON 并返回一个 io.Reader
+func marshalToReader(v interface{}) (io.Reader, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(data), nil
 }
