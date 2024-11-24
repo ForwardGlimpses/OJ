@@ -14,12 +14,14 @@ func Run() error {
 		return err
 	}
 	g := gin.New()
-	route.RegisterProblem(g.Group("api"))
-	route.RegisterContestProblem(g.Group("api"))
-	route.RegisterContest(g.Group("api"))
-	route.RegisterSourceCode(g.Group("api"))
-	route.RegisterSolution(g.Group("api"))
-	route.RegisterUsers(g.Group("api"))
+	gApi := g.Group("api")
+
+	route.RegisterProblem(gApi)
+	route.RegisterContestProblem(gApi)
+	route.RegisterContest(gApi)
+	route.RegisterSourceCode(gApi)
+	route.RegisterSolution(gApi)
+	route.RegisterUsers(gApi)
 	srv := &http.Server{
 		Addr:    "127.0.0.1:8080",
 		Handler: g,

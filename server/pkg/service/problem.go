@@ -23,7 +23,7 @@ type ProblemServiceInterface interface {
 	Submit(id int, userId string, input string) (int, error)
 }
 
-var ProblemServiceInstance ProblemServiceInterface = &ProblemService{}
+var ProblemSvc ProblemServiceInterface = &ProblemService{}
 
 type ProblemService struct{}
 
@@ -167,7 +167,7 @@ func (a *ProblemService) Submit(id int, userId string, input string) (int, error
 	}
 	fmt.Println("1111111111")
 	//改成solution的creat创建
-	_, err = SolutionServiceInstance.Create(submission)
+	_, err = SolutionSvc.Create(submission)
 	if err != nil {
 		return 0, err
 	}

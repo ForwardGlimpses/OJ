@@ -7,6 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/criyle/go-judge v1.8.5
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/urfave/cli/v2 v2.27.4
 	gorm.io/driver/mysql v1.5.7

@@ -38,3 +38,10 @@ func InvalidInput(format string, v ...any) *Error {
 		Massage: fmt.Sprintf(format, v...),
 	}
 }
+
+func AuthFailed(format string, v ...any) *Error {
+	return &Error{
+		Code:    401,
+		Massage: fmt.Sprintf(format, v...),
+	}
+}

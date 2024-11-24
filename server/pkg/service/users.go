@@ -9,13 +9,14 @@ import (
 
 type UsersServiceInterface interface {
 	Get(id int) (*schema.UsersItem, error)
+	GetWithEmail(email string) (*schema.UsersItem, error)
 	Query(params schema.UsersParams) (schema.UsersItems, error)
 	Create(item *schema.UsersItem) (int, error)
 	Update(id int, item *schema.UsersItem) error
 	Delete(id int) error
 }
 
-var UsersServiceInstance UsersServiceInterface = &UsersService{}
+var UserSvc UsersServiceInterface = &UsersService{}
 
 type UsersService struct{}
 
@@ -38,9 +39,18 @@ func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, erro
 // Get 获取用户信息
 func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
 	db := global.DB.WithContext(context.Background())
-	//var item *schema.UsersDBItem
 	item := &schema.UsersDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
+	if err != nil {
+		return nil, err
+	}
+	return item.ToItem(), nil
+}
+
+func (a *UsersService) GetWithEmail(email string) (*schema.UsersItem, error) {
+	db := global.DB.WithContext(context.Background())
+	item := &schema.UsersDBItem{}
+	err := db.Where("email = ?", email).First(item).Error
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +70,7 @@ func (a *UsersService) Create(item *schema.UsersItem) (int, error) {
 // Update 更新用户信息
 func (a *UsersService) Update(id int, item *schema.UsersItem) error {
 	db := global.DB.WithContext(context.Background())
-	err := db.Where("user_id = ?", id).Updates(item.ToDBItem()).Error
+	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
 		return err
 	}
@@ -70,7 +80,7 @@ func (a *UsersService) Update(id int, item *schema.UsersItem) error {
 // Delete 删除用户
 func (a *UsersService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
-	err := db.Where("user_id = ?", id).Delete(&schema.UsersDBItem{}).Error
+	err := db.Where("id = ?", id).Delete(&schema.UsersDBItem{}).Error
 	if err != nil {
 		return err
 	}

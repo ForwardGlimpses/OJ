@@ -16,7 +16,7 @@ type ContestServiceInterface interface {
 	Delete(id int) error
 }
 
-var ContestServiceInstance ContestServiceInterface = &ContestService{}
+var ContestSvc ContestServiceInterface = &ContestService{}
 
 type ContestService struct{}
 

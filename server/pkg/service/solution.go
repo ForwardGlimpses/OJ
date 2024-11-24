@@ -15,7 +15,7 @@ type SolutionServiceInterface interface {
 	Delete(id int) error
 }
 
-var SolutionServiceInstance SolutionServiceInterface = &SolutionService{}
+var SolutionSvc SolutionServiceInterface = &SolutionService{}
 
 type SolutionService struct{}
 

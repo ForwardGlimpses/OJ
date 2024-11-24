@@ -15,7 +15,7 @@ type SourceCodeServiceInterface interface {
 	Delete(id int) error
 }
 
-var SourceCodeServiceInstance SourceCodeServiceInterface = &SourceCodeService{}
+var SourceCodeSvc SourceCodeServiceInterface = &SourceCodeService{}
 
 type SourceCodeService struct{}
 

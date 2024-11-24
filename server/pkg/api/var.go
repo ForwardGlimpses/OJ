@@ -12,10 +12,10 @@ var (
 )
 
 func init() {
-	problemSvc = service.ProblemServiceInstance
-	contestSvc = service.ContestServiceInstance
-	contestProblemSvc = service.ContestProblemServiceInstance
-	solutionSvc = service.SolutionServiceInstance
-	sourceCodeSvc = service.SourceCodeServiceInstance
-	usersSvc = service.UsersServiceInstance
+	problemSvc = service.ProblemSvc
+	contestSvc = service.ContestSvc
+	contestProblemSvc = service.ContestProblemSvc
+	solutionSvc = service.SolutionSvc
+	sourceCodeSvc = service.SourceCodeSvc
+	usersSvc = service.UserSvc
 }
