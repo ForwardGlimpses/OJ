@@ -1,0 +1,9 @@
+{
+    "Mysql": {
+        "User":  "root",
+	    "Password": "111111",
+	    "Host":     "127.0.0.1",
+	    "Port":     3306,
+	    "DBName":   "ojmysql"
+    }
+}

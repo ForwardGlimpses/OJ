@@ -4,17 +4,18 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-	"github.com/ForwardGlimpses/OJ/server/pkg/service"
+
+	//"github.com/ForwardGlimpses/OJ/server/pkg/service"
 	"github.com/gin-gonic/gin"
 )
 
 type UsersAPI struct{}
 
-var usersSvc service.UsersServiceInterface = &service.UsersService{}
+//var usersSvc service.UsersServiceInterface = &service.UsersService{}
 
 func (a *UsersAPI) Get(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
@@ -57,7 +58,7 @@ func (a *UsersAPI) Update(c *gin.Context) {
 
 func (a *UsersAPI) Delete(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}

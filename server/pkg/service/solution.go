@@ -38,7 +38,8 @@ func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionIt
 // Get 获取解题方案
 func (a *SolutionService) Get(id int) (*schema.SolutionItem, error) {
 	db := global.DB.WithContext(context.Background())
-	var item *schema.SolutionDBItem
+	//var item *schema.SolutionDBItem
+	item := &schema.SolutionDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
 		return nil, err

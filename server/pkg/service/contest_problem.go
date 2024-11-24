@@ -8,6 +8,7 @@ import (
 )
 
 type ContestProblemServiceInterface interface {
+	Query(params schema.ContestProblemParams) (schema.ContestProblemItems, error)
 	Get(id int) (*schema.ContestProblemItem, error)
 	Create(item *schema.ContestProblemItem) (int, error)
 	Update(id int, item *schema.ContestProblemItem) error
@@ -37,7 +38,8 @@ func (a *ContestProblemService) Query(params schema.ContestProblemParams) (schem
 // Get 获取比赛问题信息
 func (a *ContestProblemService) Get(id int) (*schema.ContestProblemItem, error) {
 	db := global.DB.WithContext(context.Background())
-	var item *schema.ContestProblemDBItem
+	//var item *schema.ContestProblemDBItem
+	item := &schema.ContestProblemDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
 		return nil, err

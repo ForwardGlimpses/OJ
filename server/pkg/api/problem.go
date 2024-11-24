@@ -12,7 +12,7 @@ type ProblemAPI struct{}
 // Get 获取题目信息
 func (a *ProblemAPI) Get(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
@@ -33,7 +33,7 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _,err := problemSvc.Create(&item); err != nil {
+	if _, err := problemSvc.Create(&item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -58,7 +58,7 @@ func (a *ProblemAPI) Update(c *gin.Context) {
 // Delete 删除题目
 func (a *ProblemAPI) Delete(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}

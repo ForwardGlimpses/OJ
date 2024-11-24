@@ -4,18 +4,19 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-	"github.com/ForwardGlimpses/OJ/server/pkg/service"
+
+	//"github.com/ForwardGlimpses/OJ/server/pkg/service"
 	"github.com/gin-gonic/gin"
 )
 
 type ContestProblemAPI struct{}
 
-var contestProblemSvc service.ContestProblemServiceInterface = &service.ContestProblemService{}
+//var contestProblemSvc service.ContestProblemServiceInterface = &service.ContestProblemService{}
 
 // Get 获取指定ID的比赛问题信息
 func (a *ContestProblemAPI) Get(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
@@ -61,7 +62,7 @@ func (a *ContestProblemAPI) Update(c *gin.Context) {
 // Delete 删除指定ID的比赛问题
 func (a *ContestProblemAPI) Delete(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}

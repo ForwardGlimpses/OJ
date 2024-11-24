@@ -36,6 +36,9 @@ func (a ProblemItems) ToDBItems() ProblemDBItems {
 	return ret
 }
 
+func (a *ProblemDBItem) TableName() string {
+	return "problem"
+}
 
 func (a *ProblemDBItem) ToItem() *ProblemItem {
 	ret := &ProblemItem{}

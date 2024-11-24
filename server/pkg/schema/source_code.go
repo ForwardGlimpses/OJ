@@ -20,6 +20,10 @@ func (a *Source_codeItem) ToDBItem() *Source_codeItem {
 	return ret
 }
 
+func (a *Source_codeDBItem) TableName() string {
+	return "source_code"
+}
+
 type SourceCodeItems []*Source_codeItem
 
 func (a SourceCodeItems) ToDBItems() Source_codeItems {

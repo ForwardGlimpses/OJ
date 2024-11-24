@@ -4,18 +4,17 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-	"github.com/ForwardGlimpses/OJ/server/pkg/service"
 	"github.com/gin-gonic/gin"
 )
 
 type SolutionAPI struct{}
 
-var solutionSvc service.SolutionServiceInterface = &service.SolutionService{}
+//var solutionSvc service.SolutionServiceInterface = &service.SolutionService{}
 
 // Get 获取解决方案信息
 func (s *SolutionAPI) Get(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
@@ -61,7 +60,7 @@ func (s *SolutionAPI) Update(c *gin.Context) {
 // Delete 删除解决方案
 func (s *SolutionAPI) Delete(c *gin.Context) {
 	var id schema.ID
-	if err := c.ShouldBind(&id); err != nil {
+	if err := c.ShouldBindUri(&id); err != nil {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}

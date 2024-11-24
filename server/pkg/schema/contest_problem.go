@@ -40,6 +40,10 @@ type ContestProblemDBItem struct {
 	Submit    string
 }
 
+func (a *ContestProblemDBItem) TableName() string {
+	return "contestproblem"
+}
+
 func (a *ContestProblemDBItem) ToItem() *ContestProblemItem {
 	ret := &ContestProblemItem{}
 	copier.Copy(ret, a)

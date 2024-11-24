@@ -6,30 +6,32 @@ import (
 
 type SolutionItem struct {
 	ID int
-	Problem_ID  int
-	User_ID     string
-	Time        int
-	Memory      int
-	In_date     string
+	ProblemID  int
+	UserID     string
+	Time        uint64
+	Memory      uint64
+	Status      string
+	Indate     string
 	Language    string
-	Code_length string
-	Juage_time  string
+	Codelength string
+	Juagetime  string
 	Juager      string
-	Pass_rate   string
+	Passrate   string
 }
 
 type SolutionDBItem struct {
 	ID int
-	Problem_ID  int
-	User_ID     string
-	Time        int
-	Memory      int
-	In_date     string
+	ProblemID  int
+	UserID     string
+	Time        uint64
+	Memory      uint64
+	Status      string
+	Indate     string
 	Language    string
-	Code_length string
-	Juage_time  string
+	Codelength string
+	Juagetime  string
 	Juager      string
-	Pass_rate   string
+	Passrate   string
 }
 
 func (a *SolutionItem) ToDBItem() *SolutionDBItem {
@@ -46,6 +48,10 @@ func (a SolutionItems) ToDBItems() SolutionDBItems {
 		ret = append(ret, t.ToDBItem())
 	}
 	return ret
+}
+
+func (a *SolutionDBItem) TableName() string {
+	return "solution"
 }
 
 func (a *SolutionDBItem) ToItem() *SolutionItem {

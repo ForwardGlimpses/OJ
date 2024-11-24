@@ -1,11 +1,11 @@
 package schema
 
 type ID struct {
-	ID int `json:"id" form:"id"`
+	//ID int `json:"id" form:"id"`
+	ID int `uri:"id" binding:"required"`
 }
 
-type BaseFiled struct{
-	
+type BaseFiled struct {
 }
 
 type Response struct {

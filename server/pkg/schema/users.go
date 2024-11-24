@@ -5,25 +5,23 @@ import (
 )
 
 type UsersItem struct {
-	ID    int
-	Email       string
-	Sumbit      int
-	Solve       int
-	Password    string
-	School      string
-	Access_time string
-	Enroll_time string
+	ID         int
+	Email      string
+	Submit     int
+	Solved     int
+	Password   string
+	School     string
+	Accesstime string
 }
 
 type UsersDBItem struct {
-	ID    int
-	Email       string
-	Sumbit      int
-	Solve       int
-	Password    string
-	School      string
-	Access_time string
-	Enroll_time string
+	ID         int
+	Email      string
+	Submit     int
+	Solved     int
+	Password   string
+	School     string
+	Accesstime string
 }
 
 func (a *UsersItem) ToDBItem() *UsersDBItem {
@@ -40,6 +38,10 @@ func (a UsersItems) ToDBItems() UsersDBItems {
 		ret = append(ret, t.ToDBItem())
 	}
 	return ret
+}
+
+func (a *UsersDBItem) TableName() string {
+	return "users"
 }
 
 func (a *UsersDBItem) ToItem() *UsersItem {

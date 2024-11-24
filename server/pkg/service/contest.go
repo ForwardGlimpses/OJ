@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -38,7 +39,9 @@ func (a *ContestService) Query(params schema.ContestParams) (schema.ContestItems
 // Get 获取比赛信息
 func (a *ContestService) Get(id int) (*schema.ContestItem, error) {
 	db := global.DB.WithContext(context.Background())
-	var item *schema.ContestDBItem
+	//var item *schema.ContestDBItem
+	item := &schema.ContestDBItem{}
+	fmt.Println("idddd ", id)
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
 		return nil, err

@@ -9,23 +9,23 @@ type ContestParams struct {
 }
 
 type ContestItem struct {
-	ID  int
-	Title       string
-	Start_time  string
-	End_time    string
-	Password    string
+	ID            int
+	Title         string
+	Start_time    string
+	End_time      string
+	Password      string
 	Administrator string
-	Description string
+	Description   string
 }
 
 type ContestDBItem struct {
-	ID  int
-	Title       string
-	Start_time  string
-	End_time    string
-	Password    string
+	ID            int
+	Title         string
+	Start_time    string
+	End_time      string
+	Password      string
 	Administrator string
-	Description string
+	Description   string
 }
 
 func (a *ContestItem) ToDBItem() *ContestDBItem {
@@ -42,6 +42,10 @@ func (a ContestItems) ToDBItems() ContestDBItems {
 		ret = append(ret, t.ToDBItem())
 	}
 	return ret
+}
+
+func (a *ContestDBItem) TableName() string {
+	return "contest"
 }
 
 func (a *ContestDBItem) ToItem() *ContestItem {

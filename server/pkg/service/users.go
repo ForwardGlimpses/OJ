@@ -38,8 +38,9 @@ func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, erro
 // Get 获取用户信息
 func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
 	db := global.DB.WithContext(context.Background())
-	var item *schema.UsersDBItem
-	err := db.Where("user_id = ?", id).First(item).Error
+	//var item *schema.UsersDBItem
+	item := &schema.UsersDBItem{}
+	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
 		return nil, err
 	}
