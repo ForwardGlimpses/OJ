@@ -13,3 +13,10 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 	Error   error       `json:"error,omitempty"`
 }
+
+type PaginatedParams struct {
+	Items      []ContestItem // 当前页的数据
+	TotalCount int64         // 总记录数
+	Page       int           // 当前页码
+	PageSize   int           // 每页条数
+}

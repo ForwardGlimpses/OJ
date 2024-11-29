@@ -5,32 +5,32 @@ import (
 )
 
 type SolutionItem struct {
-	ID int
+	ID         int `json:"id"`
 	ProblemID  int
 	UserID     string
-	Time        uint64
-	Memory      uint64
-	Status      string
+	Time       uint64
+	Memory     uint64
+	Status     string
 	Indate     string
-	Language    string
+	Language   string
 	Codelength string
 	Juagetime  string
-	Juager      string
+	Juager     string
 	Passrate   string
 }
 
 type SolutionDBItem struct {
-	ID int
+	ID         int
 	ProblemID  int
 	UserID     string
-	Time        uint64
-	Memory      uint64
-	Status      string
+	Time       uint64
+	Memory     uint64
+	Status     string
 	Indate     string
-	Language    string
+	Language   string
 	Codelength string
 	Juagetime  string
-	Juager      string
+	Juager     string
 	Passrate   string
 }
 

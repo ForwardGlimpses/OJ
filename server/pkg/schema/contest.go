@@ -9,7 +9,7 @@ type ContestParams struct {
 }
 
 type ContestItem struct {
-	ID            int
+	ID            int `json:"id"`
 	Title         string
 	Start_time    string
 	End_time      string

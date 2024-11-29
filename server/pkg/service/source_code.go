@@ -38,7 +38,6 @@ func (a *SourceCodeService) Query(params schema.SourceCodeParams) (schema.Source
 // Get 获取源代码
 func (a *SourceCodeService) Get(id int) (*schema.Source_codeItem, error) {
 	db := global.DB.WithContext(context.Background())
-	//var item *schema.Source_codeItem
 	item := &schema.Source_codeItem{}
 	err := db.Where("solution_id = ?", id).First(item).Error
 	if err != nil {

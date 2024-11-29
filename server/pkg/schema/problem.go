@@ -13,7 +13,7 @@ type ProblemItem struct {
 }
 
 type ProblemDBItem struct {
-	ID          int
+	ID          int `json:"id"`
 	Title       string
 	Description string
 	Input       string

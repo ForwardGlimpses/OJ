@@ -5,13 +5,13 @@ import (
 )
 
 type Source_codeItem struct {
-	ID int
-	Source   string
+	ID     int `json:"id"`
+	Source string
 }
 
 type Source_codeDBItem struct {
-    ID int
-	Source      string
+	ID     int
+	Source string
 }
 
 func (a *Source_codeItem) ToDBItem() *Source_codeItem {
