@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
-	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,33 +26,35 @@ type UsersService struct{}
 
 // Query根据条件和分页查询获取用户列表
 func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, int64, error) {
+	// 初始化查询
+	query := global.DB.Model(&schema.UsersDBItem{})
 
-	// 构造查询条件
-	where := map[string]interface{}{}
+	// 应用过滤条件
 	if params.Email != "" {
-		where["email"] = params.Email
+		query = query.Where("email = ?", params.Email)
 	}
 	if params.Name != "" {
-		where["name"] = params.Name
+		query = query.Where("name = ?", params.Name)
 	}
 	if params.School != "" {
-		where["school"] = params.School
+		query = query.Where("school = ?", params.School)
 	}
 
-	// 获取符合条件的分页数据和总数
-	users, total, err := gormx.GetPaginatedData(&schema.UsersDBItem{}, where, params.Page, params.PageSize, "id ASC")
+	// 使用通用分页函数并指定返回类型
+	users, total, err := gormx.GetPaginatedData[schema.UsersDBItem](query, params.P, "id ASC")
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// 转换为返回的模型
+	// 转换结果为返回的模型类型
 	var items schema.UsersItems
-	for _, user := range users.([]*schema.UsersDBItem) {
+	for _, user := range users {
 		items = append(items, user.ToItem())
 	}
 
 	return items, total, nil
 }
+
 
 // Get 获取用户信息
 func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
@@ -107,13 +110,7 @@ func (a *UsersService) Delete(id int) error {
 
 // Register 用户注册方法
 func (a *UsersService) Register(name, email, password, school string) (*schema.UsersItem, error) {
-	// 检查邮箱是否已经注册
-	_, err := a.GetWithEmail(email)
-	if err == nil {
-		// 如果用户已存在，返回错误
-		return nil, errors.InvalidInput("email already registered")
-	}
-
+	
 	// 哈希密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

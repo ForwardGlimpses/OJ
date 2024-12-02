@@ -14,6 +14,12 @@ type Response struct {
 	Error   error       `json:"error,omitempty"`
 }
 
+
+type P struct {
+	Page     int
+	PageSize int
+}
+
 type PaginatedParams struct {
 	Items      []ContestItem // 当前页的数据
 	TotalCount int64         // 总记录数

@@ -72,4 +72,5 @@ func (a SolutionDBItems) ToItems() SolutionItems {
 
 type SolutionParams struct {
 	UserID string
+	P
 }

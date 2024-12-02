@@ -4,10 +4,6 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-type ContestParams struct {
-	Title string
-}
-
 type ContestItem struct {
 	ID            int `json:"id"`
 	Title         string
@@ -62,4 +58,9 @@ func (a ContestDBItems) ToItems() ContestItems {
 		ret = append(ret, t.ToItem())
 	}
 	return ret
+}
+
+type ContestParams struct {
+	Title string
+	P
 }

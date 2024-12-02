@@ -16,8 +16,8 @@ func init() {
 }
 
 // Authentication 中间件：处理身份认证和角色认证
-// requiredRoles 是需要的角色列表，只有角色匹配的用户才可以访问
-func Authentication(requiredRoles []string) gin.HandlerFunc {
+// requiredLevel 是需要的用户级别，只有级别高于或等于该级别的用户才能访问
+func Authentication(requiredLevel int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取请求中的 token
 		token, err := c.Cookie("token")
@@ -35,22 +35,22 @@ func Authentication(requiredRoles []string) gin.HandlerFunc {
 			return
 		}
 
-		// 获取用户的角色信息
-		roles, err := loginSvc.GetUserRoles(userId)
+		// 获取用户的 Level 信息
+		userLevel, err := loginSvc.GetUserLevel(userId)
 		if err != nil {
-			ginx.ResError(c, errors.AuthFailed("Unable to fetch user roles"))
-			c.Abort() // 如果获取用户角色失败，终止后续处理
+			ginx.ResError(c, errors.AuthFailed("Unable to fetch user level"))
+			c.Abort() // 如果获取用户 level 失败，终止后续处理
 			return
 		}
 
 		// 判断用户是否有权限访问该接口
-		if !isRoleAuthorized(roles, requiredRoles) {
+		if userLevel < requiredLevel {
 			ginx.ResError(c, errors.AuthFailed("User does not have the required permissions"))
-			c.Abort() // 如果没有权限，终止后续处理
+			c.Abort() // 如果用户权限不足，终止后续处理
 			return
 		}
 
-		// 如果认证和权限检查通过，设置用户 ID 到上下文中
+		// 如果认证通过，设置用户 ID 到上下文中
 		ctx := c.Request.Context()
 		ctx = context.WithValue(ctx, "user_id", userId)
 		c.Request = c.Request.WithContext(ctx)
@@ -58,17 +58,4 @@ func Authentication(requiredRoles []string) gin.HandlerFunc {
 		// 继续处理请求
 		c.Next()
 	}
-}
-
-// isRoleAuthorized 检查用户角色是否有权限访问指定的 API
-func isRoleAuthorized(userRoles []string, requiredRoles []string) bool {
-	// 判断用户角色是否与需要的角色匹配
-	for _, userRole := range userRoles {
-		for _, requiredRole := range requiredRoles {
-			if userRole == requiredRole {
-				return true
-			}
-		}
-	}
-	return false
 }

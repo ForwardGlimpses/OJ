@@ -41,7 +41,7 @@ type ContestProblemDBItem struct {
 }
 
 func (a *ContestProblemDBItem) TableName() string {
-	return "contestproblem"
+	return "contest_problem"
 }
 
 func (a *ContestProblemDBItem) ToItem() *ContestProblemItem {
@@ -62,4 +62,5 @@ func (a ContestProblemDBItems) ToItems() ContestProblemItems {
 
 type ContestProblemParams struct {
 	Title string
+	P
 }

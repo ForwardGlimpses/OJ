@@ -57,5 +57,7 @@ func (a ProblemDBItems) ToItems() ProblemItems {
 }
 
 type ProblemParams struct {
-	Title string
+	ProblemID int
+	Title     string
+	P
 }

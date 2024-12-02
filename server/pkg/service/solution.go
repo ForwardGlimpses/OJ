@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type SolutionServiceInterface interface {
 	Get(id int) (*schema.SolutionItem, error)
-	Query(params schema.SolutionParams) (schema.SolutionItems, error)
+	Query(params schema.SolutionParams) (schema.SolutionItems, int64, error)
 	Create(item *schema.SolutionItem) (int, error)
 	Update(id int, item *schema.SolutionItem) error
 	Delete(id int) error
@@ -19,20 +20,29 @@ var SolutionSvc SolutionServiceInterface = &SolutionService{}
 
 type SolutionService struct{}
 
-// Query 获取解题方案列表
-func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionItems, error) {
-	db := global.DB.WithContext(context.Background())
+// Query根据条件和分页查询获取用户列表
+func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionItems, int64, error) {
+	// 初始化查询
+	query := global.DB.Model(&schema.SolutionDBItem{})
+
+	// 应用过滤条件
 	if params.UserID != "" {
-		db.Where("user_id = ?", params.UserID)
+		query = query.Where("user_id = ?", params.UserID)
 	}
 
-	var items schema.SolutionDBItems
-	err := db.Find(&items).Error
+	// 使用通用分页函数并指定返回类型
+	solutions, total, err := gormx.GetPaginatedData[schema.SolutionDBItem](query, params.P, "id ASC")
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return items.ToItems(), nil
+	// 转换结果为返回的模型类型
+	var items schema.SolutionItems
+	for _, solution := range solutions {
+		items = append(items, solution.ToItem())
+	}
+
+	return items, total, nil
 }
 
 // Get 获取解题方案

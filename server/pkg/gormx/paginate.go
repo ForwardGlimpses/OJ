@@ -3,28 +3,29 @@ package gormx
 import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
+	"gorm.io/gorm"
 )
 
-// 通用分页查询函数
-func GetPaginatedData(model interface{}, where interface{}, page, pageSize int, orderBy string) (interface{}, int64, error) {
+// 通用分页查询函数，支持返回指定类型的数据
+func GetPaginatedData[T any](model *gorm.DB, p schema.P, orderBy string) ([]T, int64, error) {
 	var total int64
-	var result interface{}
+	var result []T
 
 	// 查询总记录数
-	err := global.DB.Model(model).Where(where).Count(&total).Error
+	err := global.DB.Model(model).Count(&total).Error
 	if err != nil {
-		return nil, 0, errors.InternalServer("Failed to count records: " + err.Error())
+		return nil, 0, errors.InternalServer("获取记录总数失败: " + err.Error())
 	}
 
 	// 分页查询数据
 	err = global.DB.Model(model).
-		Where(where).
-		Limit(pageSize).
-		Offset((page - 1) * pageSize).
+		Limit(p.PageSize).
+		Offset((p.Page - 1) * p.PageSize).
 		Order(orderBy).
 		Find(&result).Error
 	if err != nil {
-		return nil, 0, errors.InternalServer("Failed to retrieve data: " + err.Error())
+		return nil, 0, errors.InternalServer("查询数据失败: " + err.Error())
 	}
 
 	return result, total, nil

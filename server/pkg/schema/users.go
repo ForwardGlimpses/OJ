@@ -7,7 +7,7 @@ import (
 type UsersItem struct {
 	ID         int `json:"id"`
 	Name       string
-	Roles      string
+	Lever      int
 	Email      string
 	Submit     int
 	Solved     int
@@ -19,7 +19,7 @@ type UsersItem struct {
 type UsersDBItem struct {
 	ID         int
 	Name       string
-	Roles      string
+	Lever      int
 	Email      string
 	Submit     int
 	Solved     int
@@ -65,9 +65,8 @@ func (a UsersDBItems) ToItems() UsersItems {
 }
 
 type UsersParams struct {
-	Email string
-	Name string
+	Email  string
+	Name   string
 	School string
-	Page int
-	PageSize int
+	P
 }

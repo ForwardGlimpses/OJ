@@ -4,45 +4,45 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-type Source_codeItem struct {
+type SourceCodeItem struct {
 	ID     int `json:"id"`
 	Source string
 }
 
-type Source_codeDBItem struct {
+type SourceCodeDBItem struct {
 	ID     int
 	Source string
 }
 
-func (a *Source_codeItem) ToDBItem() *Source_codeItem {
-	ret := &Source_codeItem{}
+func (a *SourceCodeItem) ToDBItem() *SourceCodeDBItem {
+	ret := &SourceCodeDBItem{}
 	copier.Copy(ret, a)
 	return ret
 }
 
-func (a *Source_codeDBItem) TableName() string {
+func (a *SourceCodeDBItem) TableName() string {
 	return "source_code"
 }
 
-type SourceCodeItems []*Source_codeItem
+type SourceCodeItems []*SourceCodeItem
 
-func (a SourceCodeItems) ToDBItems() Source_codeItems {
-	ret := Source_codeItems{}
+func (a SourceCodeItems) ToDBItems() SourceCodeDBItems {
+	ret := SourceCodeDBItems{}
 	for _, t := range a {
 		ret = append(ret, t.ToDBItem())
 	}
 	return ret
 }
 
-func (a *Source_codeItem) ToItem() *Source_codeItem {
-	ret := &Source_codeItem{}
+func (a *SourceCodeDBItem) ToItem() *SourceCodeItem {
+	ret := &SourceCodeItem{}
 	copier.Copy(ret, a)
 	return ret
 }
 
-type Source_codeItems []*Source_codeItem
+type SourceCodeDBItems []*SourceCodeDBItem
 
-func (a Source_codeItems) ToItems() SourceCodeItems {
+func (a SourceCodeDBItems) ToItems() SourceCodeItems {
 	ret := SourceCodeItems{}
 	for _, t := range a {
 		ret = append(ret, t.ToItem())
@@ -52,4 +52,5 @@ func (a Source_codeItems) ToItems() SourceCodeItems {
 
 type SourceCodeParams struct {
 	SolutionID int
+	P
 }

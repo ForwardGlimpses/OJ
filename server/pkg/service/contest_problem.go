@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
 type ContestProblemServiceInterface interface {
-	Query(params schema.ContestProblemParams) (schema.ContestProblemItems, error)
+	Query(params schema.ContestProblemParams) (schema.ContestProblemItems, int64, error)
 	Get(id int) (*schema.ContestProblemItem, error)
 	Create(item *schema.ContestProblemItem) (int, error)
 	Update(id int, item *schema.ContestProblemItem) error
@@ -19,20 +20,29 @@ var ContestProblemSvc ContestProblemServiceInterface = &ContestProblemService{}
 
 type ContestProblemService struct{}
 
-// Query 获取比赛问题信息列表
-func (a *ContestProblemService) Query(params schema.ContestProblemParams) (schema.ContestProblemItems, error) {
-	db := global.DB.WithContext(context.Background())
+// Query根据条件和分页查询获取用户列表
+func (a *ContestProblemService) Query(params schema.ContestProblemParams) (schema.ContestProblemItems, int64, error) {
+	// 初始化查询
+	query := global.DB.Model(&schema.ContestProblemDBItem{})
+
+	// 应用过滤条件
 	if params.Title != "" {
-		db.Where("title = ?", params.Title)
+		query = query.Where("title = ?", params.Title)
 	}
 
-	var items schema.ContestProblemDBItems
-	err := db.Find(&items).Error
+	// 使用通用分页函数并指定返回类型
+	contestproblems, total, err := gormx.GetPaginatedData[schema.ContestProblemDBItem](query, params.P, "id ASC")
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return items.ToItems(), nil
+	// 转换结果为返回的模型类型
+	var items schema.ContestProblemItems
+	for _, contestproblem := range contestproblems {
+		items = append(items, contestproblem.ToItem())
+	}
+
+	return items, total, nil
 }
 
 // Get 获取比赛问题信息

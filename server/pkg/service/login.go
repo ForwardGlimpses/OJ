@@ -18,7 +18,7 @@ type LoginServiceInterface interface {
 	Login(email, password string) (token string, err error)
 	Logout(token string) (err error)
 	GetUserId(token string) (userId int, err error)
-	GetUserRoles(userId int) ([]string, error)
+	GetUserLevel(userId int) (int, error)
 }
 
 var LoginSvc LoginServiceInterface = &LoginService{}
@@ -128,18 +128,18 @@ func (a *LoginService) GetUserId(token string) (int, error) {
 	return userID, nil
 }
 
-// 获取用户角色
-func (a *LoginService) GetUserRoles(userId int) ([]string, error) {
-	var roles []string
+// 获取用户 Level
+func (a *LoginService) GetUserLevel(userId int) (int, error) {
+	var level int
 
-	// 使用 gorm 查询用户角色
-	err := global.DB.Model(&schema.UsersDBItem{}).Where("id = ?", userId).Pluck("role", &roles).Error
+	// 使用 gorm 查询用户的 level
+	err := global.DB.Model(&schema.UsersDBItem{}).Where("id = ?", userId).Pluck("level", &level).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.InternalServer("User not found or has no roles")
+			return 0, errors.InternalServer("User not found or has no level")
 		}
-		return nil, errors.InternalServer("Failed to retrieve user roles: " + err.Error())
+		return 0, errors.InternalServer("Failed to retrieve user level: " + err.Error())
 	}
 
-	return roles, nil
+	return level, nil
 }
