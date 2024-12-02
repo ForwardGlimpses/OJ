@@ -29,7 +29,7 @@ func (a *SourceCodeAPI) Get(c *gin.Context) {
 }
 
 func (a *SourceCodeAPI) Create(c *gin.Context) {
-	var item schema.Source_codeItem
+	var item schema.SourceCodeItem
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
@@ -43,7 +43,7 @@ func (a *SourceCodeAPI) Create(c *gin.Context) {
 }
 
 func (a *SourceCodeAPI) Update(c *gin.Context) {
-	var item schema.Source_codeItem
+	var item schema.SourceCodeItem
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
