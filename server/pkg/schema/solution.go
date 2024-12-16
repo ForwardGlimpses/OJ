@@ -7,30 +7,30 @@ import (
 type SolutionItem struct {
 	ID         int `json:"id"`
 	ProblemID  int
-	UserID     string
+	UserID     int
 	Time       uint64
 	Memory     uint64
 	Status     string
-	Indate     string
+	InDate     string
 	Language   string
 	Codelength string
-	Juagetime  string
-	Juager     string
+	Judgetime  string
+	Judger     string
 	Passrate   string
 }
 
 type SolutionDBItem struct {
 	ID         int
 	ProblemID  int
-	UserID     string
+	UserID     int
 	Time       uint64
 	Memory     uint64
 	Status     string
 	Indate     string
 	Language   string
 	Codelength string
-	Juagetime  string
-	Juager     string
+	Judgetime  string
+	Judger     string
 	Passrate   string
 }
 

@@ -11,7 +11,7 @@ type ContestProblemItem struct {
 	Title     string
 	Num       int
 	Accepted  string
-	Submit    string
+	Submited  string
 }
 
 func (a *ContestProblemItem) ToDBItem() *ContestProblemDBItem {

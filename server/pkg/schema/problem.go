@@ -5,19 +5,35 @@ import (
 )
 
 type ProblemItem struct {
-	ID          int
-	Title       string
-	Description string
-	Input       string
-	Output      string
+	ID           int
+	Title        string
+	Description  string
+	Input        string
+	Output       string
+	SampleInput  string
+	SampleOutput string
+	Indate       string
+	TimeLimit    string
+	MemoryLimit  string
+	Accepted     int
+	Submited     int
+	Solved       int
 }
 
 type ProblemDBItem struct {
-	ID          int `json:"id"`
-	Title       string
-	Description string
-	Input       string
-	Output      string
+	ID           int `json:"id"`
+	Title        string
+	Description  string
+	Input        string
+	Output       string
+	SampleInput  string
+	SampleOutput string
+	Indate       string
+	TimeLimit    string
+	MemoryLimit  string
+	Accepted     int
+	Submited     int
+	Solved       int
 }
 
 func (a *ProblemItem) ToDBItem() *ProblemDBItem {

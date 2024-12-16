@@ -12,8 +12,9 @@ func RegisterProblem(g *gin.RouterGroup) {
 	api := api.ProblemAPI{}
 	gGroup.GET(":id", api.Get)
 	gGroup.Use()
+	gGroup.POST(":id", api.Submit)
 	gGroup.POST("", api.Create)
-	gGroup.PUT("", api.Update)
+	gGroup.PUT(":id", api.Update)
 	gGroup.DELETE(":id", api.Delete)
 }
 

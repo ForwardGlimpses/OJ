@@ -7,8 +7,9 @@ import (
 type ContestItem struct {
 	ID            int `json:"id"`
 	Title         string
-	Start_time    string
-	End_time      string
+	Private      string
+	StartTime    string
+	EndTime      string
 	Password      string
 	Administrator string
 	Description   string
@@ -17,6 +18,7 @@ type ContestItem struct {
 type ContestDBItem struct {
 	ID            int
 	Title         string
+	Private       string
 	Start_time    string
 	End_time      string
 	Password      string

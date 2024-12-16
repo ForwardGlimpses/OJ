@@ -14,7 +14,6 @@ type Response struct {
 	Error   error       `json:"error,omitempty"`
 }
 
-
 type P struct {
 	Page     int
 	PageSize int

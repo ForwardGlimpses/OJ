@@ -12,6 +12,7 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	model "github.com/criyle/go-judge/cmd/go-judge/model"
+	//"github.com/google/uuid"
 )
 
 type ProblemServiceInterface interface {
@@ -21,7 +22,7 @@ type ProblemServiceInterface interface {
 	Update(id int, item *schema.ProblemItem) error
 	Delete(id int) error
 	//TODO 提交 判断 存储提交结果 返回提交结果id给前端 前端拿提交的id来查询status
-	Submit(id int, userId string, input string) (int, error)
+	Submit(id int, userId int, input string) (int, error)
 }
 
 var ProblemSvc ProblemServiceInterface = &ProblemService{}
@@ -100,7 +101,7 @@ func (a *ProblemService) Delete(id int) error {
 	return nil
 }
 
-func (a *ProblemService) Submit(id int, userId string, input string) (int, error) {
+func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 
 	//db := global.DB.WithContext(context.Background())
 
@@ -109,65 +110,127 @@ func (a *ProblemService) Submit(id int, userId string, input string) (int, error
 	if err != nil {
 		return 0, err
 	}
-
-	content := ""
+	// newUuid := uuid.New()
+	// fileName := newUuid.String()
+	// fileNameWithExtension := fileName + ".cc"
+	content := "1 1"
 	Stdout := "stdout"
 	Stderr := "stderr"
 	StoutMax := int64(10240)
 	StderrMax := int64(10240)
 	Copycontent := "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a + b << endl;\n}"
 	// Step 2: 准备发送给 Judge 的请求体
-	judgeRequest := model.Cmd{
-		Args: []string{"/usr/bin/g++", "a.cc", "-o", "a"},
-		Env:  []string{"PATH=/usr/bin:/bin"},
-		Files: []*model.CmdFile{
-			{Content: &content},
-			{Name: &Stdout, Max: &StoutMax},
-			{Name: &Stderr, Max: &StderrMax},
+	judgeRequest1 := model.Request{
+		Cmd: []model.Cmd{
+			{
+				Args: []string{"/usr/bin/g++", "a.cc", "-o", "a"},
+				Env:  []string{"PATH=/usr/bin:/bin"},
+				Files: []*model.CmdFile{
+					{Content: &content},
+					{Name: &Stdout, Max: &StoutMax},
+					{Name: &Stderr, Max: &StderrMax},
+				},
+				CPULimit:    uint64(10 * time.Second), // 10 seconds
+				MemoryLimit: 104857600,                // 100 MB
+				ProcLimit:   50,
+				CopyIn: map[string]model.CmdFile{
+					"a.cc": {
+						Content: &Copycontent,
+					},
+				},
+				CopyOut:       []string{"stdout", "stderr"},
+				CopyOutCached: []string{"a"}},
 		},
-		CPULimit:    uint64(10 * time.Second), // 10 seconds
-		MemoryLimit: 104857600,                // 100 MB
-		ProcLimit:   50,
-		CopyIn: map[string]model.CmdFile{
-			"a.cc": {
-				Content: &Copycontent,
-			},
-		},
-		CopyOut:       []string{"stdout", "stderr"},
-		CopyOutCached: []string{"a"},
 	}
 	// Step 3: 发送请求到 Judge 系统
-	body, err := marshalToReader(judgeRequest)
+	body1, err := marshalToReader(judgeRequest1)
+	if err != nil {
+		return 0, err
+	}
+	resp1, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body1)
+
+	if err != nil {
+		return 0, err
+	}
+	defer resp1.Body.Close()
+
+	bodya1, err := io.ReadAll(resp1.Body)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("Response Body:", string(bodya1)) // 打印返回的 JSON 数据
+	var judgeResponses1 []model.Result
+	err = json.Unmarshal(bodya1, &judgeResponses1)
+	if err != nil {
+		fmt.Println("Error parsing JSON response:", err)
+		return 0, err
+	}
+
+	aValue := judgeResponses1[0].FileIDs["a"]
+	judgeRequest2 := model.Request{
+		Cmd: []model.Cmd{
+			{
+				Args: []string{"a"},
+				Env:  []string{"PATH=/usr/bin:/bin"},
+				Files: []*model.CmdFile{
+					{Content: &content},
+					{Name: &Stdout, Max: &StoutMax},
+					{Name: &Stderr, Max: &StderrMax},
+				},
+				CPULimit:    uint64(10 * time.Second), // 10 seconds
+				MemoryLimit: 104857600,                // 100 MB
+				ProcLimit:   50,
+				CopyIn: map[string]model.CmdFile{
+					"a": {
+						FileID: &aValue,
+					},
+				},
+			},
+		},
+	}
+	body2, err := marshalToReader(judgeRequest2)
 	if err != nil {
 		return 0, err
 	}
 
-	resp, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body)
+	resp2, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body2)
+
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer resp2.Body.Close()
+
+	bodya2, err := io.ReadAll(resp2.Body)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("Response Body:", string(bodya2)) // 打印返回的 JSON 数据
 
 	// Step 4: 解析 Judge 系统返回的结果
-	var judgeResponse model.Result
-	if err := json.NewDecoder(resp.Body).Decode(&judgeResponse); err != nil {
+	var judgeResponse2 []model.Result
+	err = json.Unmarshal(bodya2, &judgeResponse2)
+	if err != nil {
+		fmt.Println("Error parsing JSON response:", err)
 		return 0, err
 	}
 
 	// Step 5: 对比评测结果和标准答案
-	isCorrect := judgeResponse.Files["stdout"] == problem.Output
+	contentOutput := judgeResponse2[0].Files["stdout"]
+	isCorrect := contentOutput == problem.Output
 	status := "Accepted"
 	if !isCorrect {
 		status = "Wrong Answer"
 	}
+	fmt.Println("程序输出", contentOutput)
+	fmt.Println("样例输出", problem.Output)
 
 	// Step 6: 将评测结果存储到数据库
 	submission := &schema.SolutionItem{
 		ProblemID: id,
 		UserID:    userId,
 		Status:    status,
-		Time:      judgeResponse.Time,
-		Memory:    judgeResponse.Memory,
+		// Time:      judgeRespons,
+		// Memory:    judgeResponse.Memory,
 		//Indate:     ,
 		//Language:   judgeResponse.Language,
 		//Codelength: judgeResponse.Codelength,
@@ -175,7 +238,6 @@ func (a *ProblemService) Submit(id int, userId string, input string) (int, error
 		//Juager:     juager,
 		//Passrate:   passrate,
 	}
-	fmt.Println("1111111111")
 	//改成solution的creat创建
 	_, err = SolutionSvc.Create(submission)
 	if err != nil {
