@@ -20,7 +20,7 @@ type SolutionItem struct {
 }
 
 type SolutionDBItem struct {
-	ID         int
+	ID         int `gorm:"primary_key;auto_increment"`
 	ProblemID  int
 	UserID     int
 	Time       uint64

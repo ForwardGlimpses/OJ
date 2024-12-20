@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
@@ -64,6 +65,16 @@ func (a *SolutionService) Create(item *schema.SolutionItem) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	// 手动查询填充 ID
+	var createdItem schema.SolutionDBItem
+	err = db.Where("problem_id = ? AND user_id = ? AND status = ?", item.ProblemID, item.UserID, "Pending").First(&createdItem).Error
+	if err != nil {
+		return 0, err
+	}
+
+	// 更新 SolutionItem 的 ID
+	item.ID = createdItem.ID
+	fmt.Println("Solution created with ID:", item.ID)
 	return item.ID, nil
 }
 

@@ -34,6 +34,7 @@ var C Config
 
 type Config struct {
 	Mysql Mysql
+	OJ    OjConfig
 }
 
 type Mysql struct {
@@ -44,7 +45,16 @@ type Mysql struct {
 	DBName   string
 }
 
+type OjConfig struct {
+	Host string
+	Port int
+}
+
 func (a Mysql) DSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
 		a.User, a.Password, a.Host, a.Port, a.DBName)
+}
+
+func (o OjConfig) BaseURL() string {
+	return fmt.Sprintf("http://%s:%d", o.Host, o.Port)
 }

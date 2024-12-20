@@ -39,6 +39,7 @@ func (s *SolutionAPI) Create(c *gin.Context) {
 		ginx.ResError(c, err)
 		return
 	}
+
 	ginx.ResSuccess(c, "创建成功")
 }
 

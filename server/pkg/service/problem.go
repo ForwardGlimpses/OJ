@@ -8,6 +8,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -22,7 +23,7 @@ type ProblemServiceInterface interface {
 	Update(id int, item *schema.ProblemItem) error
 	Delete(id int) error
 	//TODO 提交 判断 存储提交结果 返回提交结果id给前端 前端拿提交的id来查询status
-	Submit(id int, userId int, input string) (int, error)
+	Submit(id int, userId int, inputCode string) (int, error)
 }
 
 var ProblemSvc ProblemServiceInterface = &ProblemService{}
@@ -90,7 +91,6 @@ func (a *ProblemService) Update(id int, item *schema.ProblemItem) error {
 // Delete 根据ID删除题目
 func (a *ProblemService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
-	//err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{}).Error
 	err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{})
 	if err.Error != nil {
 		return err.Error
@@ -101,7 +101,7 @@ func (a *ProblemService) Delete(id int) error {
 	return nil
 }
 
-func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
+func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, error) {
 
 	//db := global.DB.WithContext(context.Background())
 
@@ -110,20 +110,30 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	// newUuid := uuid.New()
-	// fileName := newUuid.String()
-	// fileNameWithExtension := fileName + ".cc"
-	content := "1 1"
+
+	submission := &schema.SolutionItem{
+		ProblemID: id,
+		UserID:    userId,
+		Status:    "Pending",
+	}
+
+	submissionId, err := SolutionSvc.Create(submission)
+	if err != nil {
+		return 0, err
+	}
+
+	fileName := fmt.Sprintf("%d", submissionId)
+	fileNameWithExtension := fileName + ".cc"
+	content := problem.Input
 	Stdout := "stdout"
 	Stderr := "stderr"
 	StoutMax := int64(10240)
 	StderrMax := int64(10240)
-	Copycontent := "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a + b << endl;\n}"
 	// Step 2: 准备发送给 Judge 的请求体
 	judgeRequest1 := model.Request{
 		Cmd: []model.Cmd{
 			{
-				Args: []string{"/usr/bin/g++", "a.cc", "-o", "a"},
+				Args: []string{"/usr/bin/g++", fileNameWithExtension, "-o", fileName},
 				Env:  []string{"PATH=/usr/bin:/bin"},
 				Files: []*model.CmdFile{
 					{Content: &content},
@@ -134,20 +144,23 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 				MemoryLimit: 104857600,                // 100 MB
 				ProcLimit:   50,
 				CopyIn: map[string]model.CmdFile{
-					"a.cc": {
-						Content: &Copycontent,
+					fileNameWithExtension: {
+						Content: &inputCode,
 					},
 				},
 				CopyOut:       []string{"stdout", "stderr"},
-				CopyOutCached: []string{"a"}},
+				CopyOutCached: []string{fileName}},
 		},
 	}
+	//fmt.Println(fileNameWithExtension, "---", fileName)
+
 	// Step 3: 发送请求到 Judge 系统
 	body1, err := marshalToReader(judgeRequest1)
 	if err != nil {
 		return 0, err
 	}
-	resp1, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body1)
+	ojBaseURL := config.C.OJ.BaseURL()
+	resp1, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body1)
 
 	if err != nil {
 		return 0, err
@@ -158,7 +171,9 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	fmt.Println("Response Body:", string(bodya1)) // 打印返回的 JSON 数据
+
 	var judgeResponses1 []model.Result
 	err = json.Unmarshal(bodya1, &judgeResponses1)
 	if err != nil {
@@ -166,11 +181,11 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 		return 0, err
 	}
 
-	aValue := judgeResponses1[0].FileIDs["a"]
+	aValue := judgeResponses1[0].FileIDs[fileName]
 	judgeRequest2 := model.Request{
 		Cmd: []model.Cmd{
 			{
-				Args: []string{"a"},
+				Args: []string{fileName},
 				Env:  []string{"PATH=/usr/bin:/bin"},
 				Files: []*model.CmdFile{
 					{Content: &content},
@@ -181,19 +196,20 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 				MemoryLimit: 104857600,                // 100 MB
 				ProcLimit:   50,
 				CopyIn: map[string]model.CmdFile{
-					"a": {
+					fileName: {
 						FileID: &aValue,
 					},
 				},
 			},
 		},
 	}
+
 	body2, err := marshalToReader(judgeRequest2)
 	if err != nil {
 		return 0, err
 	}
 
-	resp2, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body2)
+	resp2, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body2)
 
 	if err != nil {
 		return 0, err
@@ -225,7 +241,7 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 	fmt.Println("样例输出", problem.Output)
 
 	// Step 6: 将评测结果存储到数据库
-	submission := &schema.SolutionItem{
+	submission = &schema.SolutionItem{
 		ProblemID: id,
 		UserID:    userId,
 		Status:    status,
@@ -239,13 +255,13 @@ func (a *ProblemService) Submit(id int, userId int, input string) (int, error) {
 		//Passrate:   passrate,
 	}
 	//改成solution的creat创建
-	_, err = SolutionSvc.Create(submission)
+	err = SolutionSvc.Update(submissionId, submission)
 	if err != nil {
 		return 0, err
 	}
 
 	// Step 7: 返回提交记录的 ID
-	return submission.ID, nil
+	return submissionId, nil
 }
 
 // 将结构体编码成 JSON 并返回一个 io.Reader
