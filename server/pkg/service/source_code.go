@@ -5,6 +5,7 @@ import (
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
@@ -33,6 +34,7 @@ func (a *SourceCodeService) Query(params schema.SourceCodeParams) (schema.Source
 	// 使用通用分页函数并指定返回类型
 	sources, total, err := gormx.GetPaginatedData[schema.SourceCodeDBItem](query, params.P, "id ASC")
 	if err != nil {
+		logs.Error("Failed to query source codes:", err)
 		return nil, 0, err
 	}
 
@@ -51,6 +53,7 @@ func (a *SourceCodeService) Get(id int) (*schema.SourceCodeItem, error) {
 	item := &schema.SourceCodeDBItem{}
 	err := db.Where("solution_id = ?", id).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get source code with ID:", id, "Error:", err)
 		return nil, err
 	}
 	return item.ToItem(), nil
@@ -61,6 +64,7 @@ func (a *SourceCodeService) Create(item *schema.SourceCodeItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to create source code:", err)
 		return 0, err
 	}
 	return item.ID, nil
@@ -71,6 +75,7 @@ func (a *SourceCodeService) Update(id int, item *schema.SourceCodeItem) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("solution_id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to update source code with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -81,6 +86,7 @@ func (a *SourceCodeService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("solution_id = ?", id).Delete(&schema.SourceCodeItem{}).Error
 	if err != nil {
+		logs.Error("Failed to delete source code with ID:", id, "Error:", err)
 		return err
 	}
 	return nil

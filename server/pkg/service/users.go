@@ -6,6 +6,7 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -43,6 +44,7 @@ func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, int6
 	// 使用通用分页函数并指定返回类型
 	users, total, err := gormx.GetPaginatedData[schema.UsersDBItem](query, params.P, "id ASC")
 	if err != nil {
+		logs.Error("Failed to query users:", err)
 		return nil, 0, err
 	}
 
@@ -55,13 +57,13 @@ func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, int6
 	return items, total, nil
 }
 
-
 // Get 获取用户信息
 func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
 	db := global.DB.WithContext(context.Background())
 	item := &schema.UsersDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get user with ID:", id, "Error:", err)
 		return nil, err
 	}
 	return item.ToItem(), nil
@@ -73,6 +75,7 @@ func (a *UsersService) GetWithEmail(email string) (*schema.UsersItem, error) {
 	item := &schema.UsersDBItem{}
 	err := db.Where("email = ?", email).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get user with email:", email, "Error:", err)
 		return nil, err
 	}
 	return item.ToItem(), nil
@@ -83,6 +86,7 @@ func (a *UsersService) Create(item *schema.UsersItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to create user:", err)
 		return 0, err
 	}
 	return item.ID, nil
@@ -93,6 +97,7 @@ func (a *UsersService) Update(id int, item *schema.UsersItem) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to update user with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -103,6 +108,7 @@ func (a *UsersService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Delete(&schema.UsersDBItem{}).Error
 	if err != nil {
+		logs.Error("Failed to delete user with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -110,10 +116,11 @@ func (a *UsersService) Delete(id int) error {
 
 // Register 用户注册方法
 func (a *UsersService) Register(name, email, password, school string) (*schema.UsersItem, error) {
-	
+
 	// 哈希密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		logs.Error("Failed to hash password:", err)
 		return nil, errors.InternalServer("failed to hash password")
 	}
 
@@ -129,6 +136,7 @@ func (a *UsersService) Register(name, email, password, school string) (*schema.U
 	// 调用 Create 方法将用户保存到数据库
 	_, err = a.Create(newUser)
 	if err != nil {
+		logs.Error("Failed to create user:", err)
 		return nil, errors.InternalServer("failed to create user")
 	}
 	return newUser, nil

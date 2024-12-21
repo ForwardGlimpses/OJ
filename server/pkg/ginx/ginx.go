@@ -37,7 +37,7 @@ func ResError(c *gin.Context, err error) {
 	if e, ok := errors.As(err); ok {
 		merr = e
 	} else {
-		merr = errors.InternalServer(err.Error())
+		merr = errors.InternalServer("internal server error: %v", err)
 	}
 	ResJSON(c, merr.Code, merr)
 }

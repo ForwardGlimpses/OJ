@@ -138,7 +138,7 @@ func (a *LoginService) GetUserLevel(userId int) (int, error) {
 		if err == gorm.ErrRecordNotFound {
 			return 0, errors.InternalServer("User not found or has no level")
 		}
-		return 0, errors.InternalServer("Failed to retrieve user level: " + err.Error())
+		return 0, errors.InternalServer("Failed to get user level: %v", err)
 	}
 
 	return level, nil

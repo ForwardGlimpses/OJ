@@ -5,6 +5,7 @@ import (
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
@@ -33,6 +34,7 @@ func (a *ContestProblemService) Query(params schema.ContestProblemParams) (schem
 	// 使用通用分页函数并指定返回类型
 	contestproblems, total, err := gormx.GetPaginatedData[schema.ContestProblemDBItem](query, params.P, "id ASC")
 	if err != nil {
+		logs.Error("Failed to query contest problems:", err)
 		return nil, 0, err
 	}
 
@@ -52,6 +54,7 @@ func (a *ContestProblemService) Get(id int) (*schema.ContestProblemItem, error) 
 	item := &schema.ContestProblemDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get contest problem with ID:", id, "Error:", err)
 		return nil, err
 	}
 
@@ -63,6 +66,7 @@ func (a *ContestProblemService) Create(item *schema.ContestProblemItem) (int, er
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to create contest problem:", err)
 		return 0, err
 	}
 	return item.ID, nil
@@ -73,6 +77,7 @@ func (a *ContestProblemService) Update(id int, item *schema.ContestProblemItem) 
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to update contest problem with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -83,6 +88,7 @@ func (a *ContestProblemService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Delete(&schema.ContestProblemDBItem{}).Error
 	if err != nil {
+		logs.Error("Failed to delete contest problem with ID:", id, "Error:", err)
 		return err
 	}
 	return nil

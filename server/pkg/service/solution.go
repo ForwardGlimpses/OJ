@@ -6,6 +6,7 @@ import (
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 )
 
@@ -34,6 +35,7 @@ func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionIt
 	// 使用通用分页函数并指定返回类型
 	solutions, total, err := gormx.GetPaginatedData[schema.SolutionDBItem](query, params.P, "id ASC")
 	if err != nil {
+		logs.Error("Failed to query solutions:", err)
 		return nil, 0, err
 	}
 
@@ -53,6 +55,7 @@ func (a *SolutionService) Get(id int) (*schema.SolutionItem, error) {
 	item := &schema.SolutionDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get solution with ID:", id, "Error:", err)
 		return nil, err
 	}
 	return item.ToItem(), nil
@@ -63,12 +66,14 @@ func (a *SolutionService) Create(item *schema.SolutionItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to create solution:", err)
 		return 0, err
 	}
 	// 手动查询填充 ID
 	var createdItem schema.SolutionDBItem
 	err = db.Where("problem_id = ? AND user_id = ? AND status = ?", item.ProblemID, item.UserID, "Pending").First(&createdItem).Error
 	if err != nil {
+		logs.Error("Failed to get created solution:", err)
 		return 0, err
 	}
 
@@ -83,6 +88,7 @@ func (a *SolutionService) Update(id int, item *schema.SolutionItem) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to update solution with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -93,6 +99,7 @@ func (a *SolutionService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Delete(&schema.SolutionDBItem{}).Error
 	if err != nil {
+		logs.Error("Failed to delete solution with ID:", id, "Error:", err)
 		return err
 	}
 	return nil

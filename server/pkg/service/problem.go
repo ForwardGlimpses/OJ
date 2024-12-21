@@ -11,6 +11,7 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	model "github.com/criyle/go-judge/cmd/go-judge/model"
 	//"github.com/google/uuid"
@@ -43,6 +44,7 @@ func (a *ProblemService) Query(params schema.ProblemParams) (schema.ProblemItems
 	// 使用通用分页函数并指定返回类型
 	problems, total, err := gormx.GetPaginatedData[schema.ProblemDBItem](query, params.P, "id ASC")
 	if err != nil {
+		logs.Error("Failed to query problems:", err)
 		return nil, 0, err
 	}
 
@@ -58,12 +60,13 @@ func (a *ProblemService) Query(params schema.ProblemParams) (schema.ProblemItems
 // Get 通过ID从数据库获取题目
 func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
 	db := global.DB.WithContext(context.Background())
-	//var item *schema.ProblemDBItem
 	item := &schema.ProblemDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
+		logs.Error("Failed to get problem with ID:", id, "Error:", err)
 		return nil, err
 	}
+	logs.Info("Successfully retrieved problem with ID:", id)
 	return item.ToItem(), nil
 }
 
@@ -73,6 +76,7 @@ func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to create problem:", err)
 		return 0, err
 	}
 	return item.ID, nil
@@ -83,6 +87,7 @@ func (a *ProblemService) Update(id int, item *schema.ProblemItem) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
 	if err != nil {
+		logs.Error("Failed to update problem with ID:", id, "Error:", err)
 		return err
 	}
 	return nil
@@ -93,6 +98,7 @@ func (a *ProblemService) Delete(id int) error {
 	db := global.DB.WithContext(context.Background())
 	err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{})
 	if err.Error != nil {
+		logs.Error("Failed to delete problem with ID:", id, "Error:", err.Error)
 		return err.Error
 	}
 	if err.RowsAffected == 0 {
@@ -108,6 +114,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	// Step 1: 获取题目详细信息
 	problem, err := a.Get(id)
 	if err != nil {
+		logs.Error("Failed to get problem with ID:", id, "Error:", err)
 		return 0, err
 	}
 
@@ -119,6 +126,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 
 	submissionId, err := SolutionSvc.Create(submission)
 	if err != nil {
+		logs.Error("Failed to create submission:", err)
 		return 0, err
 	}
 
@@ -129,6 +137,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	Stderr := "stderr"
 	StoutMax := int64(10240)
 	StderrMax := int64(10240)
+
 	// Step 2: 准备发送给 Judge 的请求体
 	judgeRequest1 := model.Request{
 		Cmd: []model.Cmd{
@@ -157,18 +166,21 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	// Step 3: 发送请求到 Judge 系统
 	body1, err := marshalToReader(judgeRequest1)
 	if err != nil {
+		logs.Error("Failed to marshal request body:", err)
 		return 0, err
 	}
 	ojBaseURL := config.C.OJ.BaseURL()
 	resp1, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body1)
 
 	if err != nil {
+		logs.Error("Failed to send request to Judge system:", err)
 		return 0, err
 	}
 	defer resp1.Body.Close()
 
 	bodya1, err := io.ReadAll(resp1.Body)
 	if err != nil {
+		logs.Error("Failed to read response body:", err)
 		return 0, err
 	}
 
@@ -177,7 +189,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	var judgeResponses1 []model.Result
 	err = json.Unmarshal(bodya1, &judgeResponses1)
 	if err != nil {
-		fmt.Println("Error parsing JSON response:", err)
+		logs.Error("Error parsing JSON response:", err)
 		return 0, err
 	}
 
@@ -206,18 +218,21 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 
 	body2, err := marshalToReader(judgeRequest2)
 	if err != nil {
+		logs.Error("Failed to marshal request body:", err)
 		return 0, err
 	}
 
 	resp2, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body2)
 
 	if err != nil {
+		logs.Error("Failed to send request to Judge system:", err)
 		return 0, err
 	}
 	defer resp2.Body.Close()
 
 	bodya2, err := io.ReadAll(resp2.Body)
 	if err != nil {
+		logs.Error("Failed to read response body:", err)
 		return 0, err
 	}
 	fmt.Println("Response Body:", string(bodya2)) // 打印返回的 JSON 数据
@@ -226,7 +241,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	var judgeResponse2 []model.Result
 	err = json.Unmarshal(bodya2, &judgeResponse2)
 	if err != nil {
-		fmt.Println("Error parsing JSON response:", err)
+		logs.Error("Error parsing JSON response:", err)
 		return 0, err
 	}
 
@@ -257,6 +272,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	//改成solution的creat创建
 	err = SolutionSvc.Update(submissionId, submission)
 	if err != nil {
+		logs.Error("Failed to update submission:", err)
 		return 0, err
 	}
 
@@ -268,6 +284,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 func marshalToReader(v interface{}) (io.Reader, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
+		logs.Error("Failed to marshal JSON:", err)
 		return nil, err
 	}
 	return bytes.NewReader(data), nil

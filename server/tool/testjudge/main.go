@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/criyle/go-judge/cmd/go-judge/model"
 )
 
@@ -44,17 +45,20 @@ func main() {
 	// Step 3: 发送请求到 Judge 系统
 	body, err := marshalToReader(judgeRequest)
 	if err != nil {
+		logs.Error("Failed to marshal request body:", err)
 		panic(err)
 	}
 	resp, err := global.HttpClient.Post("http://localhost:5050/run", "application/json", body)
 
 	if err != nil {
+		logs.Error("Failed to send request to Judge system:", err)
 		panic(err)
 	}
 	defer resp.Body.Close()
 
 	bodya, err := io.ReadAll(resp.Body)
 	if err != nil {
+		logs.Error("Failed to read response body:", err)
 		panic(err)
 	}
 	fmt.Println("Response Body:", string(bodya)) // 打印返回的 JSON 数据
@@ -62,6 +66,7 @@ func main() {
 	// Step 4: 解析 Judge 系统返回的结果
 	var judgeResponse []model.Result
 	if err := json.Unmarshal(bodya, &judgeResponse); err != nil {
+		logs.Error("Error parsing JSON response:", err)
 		panic(err)
 	}
 	// Step 5: 对比评测结果和标准答案
@@ -78,6 +83,7 @@ func main() {
 func marshalToReader(v interface{}) (io.Reader, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
+		logs.Error("Failed to marshal JSON:", err)
 		return nil, err
 	}
 	return bytes.NewReader(data), nil
