@@ -1,3 +1,8 @@
 {"level":"info","msg":"用户 11 提交了题目 1 的代码","time":"2024-12-21T17:59:58+08:00"}
 {"level":"info","msg":"Successfully retrieved problem with ID:1","time":"2024-12-21T17:59:58+08:00"}
 {"level":"info","msg":"Successfully submitted problem with ID:1","time":"2024-12-21T17:59:59+08:00"}
+{"level":"info","msg":"用户 11 提交了题目 1 的代码","time":"2024-12-21T18:35:03+08:00"}
+{"level":"info","msg":"Successfully retrieved problem with ID:1","time":"2024-12-21T18:35:03+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":256645200,\"memory\":42397696,\"runTime\":257693810,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"45\":\"XJVVZ6X6\"}}]\n","time":"2024-12-21T18:35:04+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":1917300,\"memory\":290816,\"runTime\":2462668,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2024-12-21T18:35:04+08:00"}
+{"level":"info","msg":"Successfully submitted problem with ID:1","time":"2024-12-21T18:35:04+08:00"}

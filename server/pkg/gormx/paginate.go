@@ -15,7 +15,7 @@ func GetPaginatedData[T any](db *gorm.DB, p schema.P, orderBy string) ([]T, int6
 	// 查询总记录数
 	err := db.Model(&t).Count(&total).Error
 	if err != nil {
-		return nil, 0, errors.InternalServer("获取记录总数失败: " + err.Error())
+		return nil, 0, errors.InternalServer("查询数据失败: %v", err)
 	}
 
 	// 分页查询数据
@@ -25,7 +25,7 @@ func GetPaginatedData[T any](db *gorm.DB, p schema.P, orderBy string) ([]T, int6
 		Order(orderBy).
 		Find(&result).Error
 	if err != nil {
-		return nil, 0, errors.InternalServer("查询数据失败: " + err.Error())
+		return nil, 0, errors.InternalServer("分页查询数据失败: %v", err)
 	}
 
 	return result, total, nil

@@ -184,7 +184,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		return 0, err
 	}
 
-	fmt.Println("Response Body:", string(bodya1)) // 打印返回的 JSON 数据
+	logs.Info("Response Body:", string(bodya1)) //记录返回的 JSON 数据
 
 	var judgeResponses1 []model.Result
 	err = json.Unmarshal(bodya1, &judgeResponses1)
@@ -235,8 +235,8 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		logs.Error("Failed to read response body:", err)
 		return 0, err
 	}
-	fmt.Println("Response Body:", string(bodya2)) // 打印返回的 JSON 数据
 
+	logs.Info("Response Body:", string(bodya2)) //记录返回的 JSON 数据
 	// Step 4: 解析 Judge 系统返回的结果
 	var judgeResponse2 []model.Result
 	err = json.Unmarshal(bodya2, &judgeResponse2)
