@@ -6,6 +6,9 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/bootstrap"
 	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
+
+	//"github.com/gin-contrib/cors"
+	//"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 )
 
@@ -13,7 +16,6 @@ var VERSION = "v0.0.1"
 
 func main() {
 	logs.Init() //初始化日志配置
-
 	app := cli.NewApp()
 	app.Name = "console"
 	app.Version = VERSION
@@ -36,6 +38,7 @@ var (
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "Runtime configuration files",
+				Value: "configs/config.json",
 			},
 		},
 		Action: func(c *cli.Context) error {

@@ -72,7 +72,6 @@ func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
 
 // Create 将 ProblemItem 转换为 ProblemDBItem 并存入数据库
 func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
-	fmt.Println("")
 	db := global.DB.WithContext(context.Background())
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {

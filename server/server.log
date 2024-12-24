@@ -6,3 +6,22 @@
 {"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":256645200,\"memory\":42397696,\"runTime\":257693810,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"45\":\"XJVVZ6X6\"}}]\n","time":"2024-12-21T18:35:04+08:00"}
 {"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":1917300,\"memory\":290816,\"runTime\":2462668,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2024-12-21T18:35:04+08:00"}
 {"level":"info","msg":"Successfully submitted problem with ID:1","time":"2024-12-21T18:35:04+08:00"}
+{"level":"error","msg":"Failed to run bootstrap:dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it.","time":"2024-12-22T14:05:56+08:00"}
+{"level":"info","msg":"用户 11 提交了题目 2 的代码","time":"2024-12-23T12:06:05+08:00"}
+{"level":"info","msg":"Successfully retrieved problem with ID:2","time":"2024-12-23T12:06:05+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":252973700,\"memory\":76771328,\"runTime\":406758863,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"46\":\"ACB4PXYG\"}}]\n","time":"2024-12-23T12:06:05+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":2295000,\"memory\":2117632,\"runTime\":7410416,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2024-12-23T12:06:05+08:00"}
+{"level":"info","msg":"用户 11 提交了题目 2 的代码","time":"2024-12-23T16:05:43+08:00"}
+{"level":"info","msg":"Successfully retrieved problem with ID:2","time":"2024-12-23T16:05:43+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":313472700,\"memory\":77365248,\"runTime\":447535506,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"47\":\"MGLM6UU7\"}}]\n","time":"2024-12-23T16:05:43+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":1653600,\"memory\":2117632,\"runTime\":6763558,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2024-12-23T16:05:43+08:00"}
+{"level":"info","msg":"用户 11 提交了题目 2 的代码","time":"2024-12-23T16:07:14+08:00"}
+{"level":"info","msg":"Successfully retrieved problem with ID:2","time":"2024-12-23T16:07:14+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":235130900,\"memory\":42074112,\"runTime\":236241777,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"48\":\"R2MEVO5F\"}}]\n","time":"2024-12-23T16:07:14+08:00"}
+{"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":1181900,\"memory\":290816,\"runTime\":1652555,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2024-12-23T16:07:14+08:00"}
+{"level":"info","msg":"Successfully retrieved problem with ID:2","time":"2024-12-23T16:09:45+08:00"}
+{"level":"error","msg":"Failed to get solution with ID:1Error:record not found","time":"2024-12-23T16:10:02+08:00"}
+{"level":"error","msg":"Failed to get solution with ID:2Error:record not found","time":"2024-12-23T16:10:21+08:00"}
+{"level":"error","msg":"Failed to open config file:open ./configs/config.json: The system cannot find the file specified.","time":"2024-12-23T16:41:26+08:00"}
+{"level":"error","msg":"Failed to load config:could not open config file: open ./configs/config.json: The system cannot find the file specified.","time":"2024-12-23T16:41:26+08:00"}
+{"level":"error","msg":"Failed to start the application:could not open config file: open ./configs/config.json: The system cannot find the file specified.","time":"2024-12-23T16:41:26+08:00"}
