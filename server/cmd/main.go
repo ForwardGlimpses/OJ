@@ -24,7 +24,6 @@ func main() {
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		logs.Error("Failed to start the application:", err)
 		panic(err)
 	}
 }
@@ -44,14 +43,12 @@ var (
 		Action: func(c *cli.Context) error {
 			err := config.Load(c.String("config"))
 			if err != nil {
-				logs.Error("Failed to load config:", err)
 				return err
 			}
 
 			err = bootstrap.Run()
 			if err != nil {
-				logs.Error("Failed to run bootstrap:", err)
-				panic(err)
+				return err;
 			}
 			return nil
 		},

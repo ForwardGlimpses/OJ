@@ -4,19 +4,19 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-
-	//"github.com/ForwardGlimpses/OJ/server/pkg/service"
 	"github.com/gin-gonic/gin"
 )
 
+// UsersAPI 用户 API
 type UsersAPI struct{}
 
-//var usersSvc service.UsersServiceInterface = &service.UsersService{}
-
+// Get 获取用户信息
 func (a *UsersAPI) Get(c *gin.Context) {
-	var id schema.ID
+	var id struct {
+		ID int `uri:"id" binding:"required"`
+	}
 	if err := c.ShouldBindUri(&id); err != nil {
-		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		ginx.ResError(c, errors.InvalidInput("无效的用户ID"))
 		return
 	}
 
@@ -28,6 +28,7 @@ func (a *UsersAPI) Get(c *gin.Context) {
 	ginx.ResSuccess(c, item)
 }
 
+// Create 创建用户
 func (a *UsersAPI) Create(c *gin.Context) {
 	var item schema.UsersItem
 	if err := c.ShouldBindJSON(&item); err != nil {
@@ -35,13 +36,15 @@ func (a *UsersAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _, err := usersSvc.Create(&item); err != nil {
+	createdUser, err := usersSvc.Register(item.Name, item.Email, item.Password, item.School)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, createdUser)
 }
 
+// Update 更新用户信息
 func (a *UsersAPI) Update(c *gin.Context) {
 	var item schema.UsersItem
 	if err := c.ShouldBindJSON(&item); err != nil {
@@ -56,10 +59,13 @@ func (a *UsersAPI) Update(c *gin.Context) {
 	ginx.ResSuccess(c, "更新成功")
 }
 
+// Delete 删除用户
 func (a *UsersAPI) Delete(c *gin.Context) {
-	var id schema.ID
+	var id struct {
+		ID int `uri:"id" binding:"required"`
+	}
 	if err := c.ShouldBindUri(&id); err != nil {
-		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		ginx.ResError(c, errors.InvalidInput("无效的用户ID"))
 		return
 	}
 

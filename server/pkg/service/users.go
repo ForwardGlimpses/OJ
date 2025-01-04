@@ -15,7 +15,6 @@ type UsersServiceInterface interface {
 	Get(id int) (*schema.UsersItem, error)
 	GetWithEmail(email string) (*schema.UsersItem, error)
 	Query(params schema.UsersParams) (schema.UsersItems, int64, error)
-	Create(item *schema.UsersItem) (int, error)
 	Update(id int, item *schema.UsersItem) error
 	Delete(id int) error
 	Register(name, email, password, school string) (*schema.UsersItem, error) // Register方法只需验证、处理和调用Create
@@ -81,15 +80,33 @@ func (a *UsersService) GetWithEmail(email string) (*schema.UsersItem, error) {
 	return item.ToItem(), nil
 }
 
-// Create 创建用户
-func (a *UsersService) Create(item *schema.UsersItem) (int, error) {
-	db := global.DB.WithContext(context.Background())
-	err := db.Create(item.ToDBItem()).Error
+// Register 用户注册方法
+func (a *UsersService) Register(name, email, password, school string) (*schema.UsersItem, error) {
+	// 哈希密码
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		logs.Error("Failed to hash password:", err)
+		return nil, errors.InternalServer("failed to hash password")
+	}
+
+	// 创建新的用户实例
+	newUser := &schema.UsersItem{
+		Name:     name,
+		Email:    email,
+		Password: string(hashedPassword),
+		Submit:   0,
+		Solved:   0,
+		School:   school,
+	}
+
+	// 将用户数据保存到数据库
+	err = global.DB.WithContext(context.Background()).Create(newUser).Error
 	if err != nil {
 		logs.Error("Failed to create user:", err)
-		return 0, err
+		return nil, errors.InternalServer("failed to create user")
 	}
-	return item.ID, nil
+
+	return newUser, nil
 }
 
 // Update 更新用户信息
@@ -112,32 +129,4 @@ func (a *UsersService) Delete(id int) error {
 		return err
 	}
 	return nil
-}
-
-// Register 用户注册方法
-func (a *UsersService) Register(name, email, password, school string) (*schema.UsersItem, error) {
-
-	// 哈希密码
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		logs.Error("Failed to hash password:", err)
-		return nil, errors.InternalServer("failed to hash password")
-	}
-
-	// 创建新的用户实例
-	newUser := &schema.UsersItem{
-		Name:     name,
-		Email:    email,
-		Password: string(hashedPassword),
-		Submit:   0,
-		Solved:   0,
-		School:   school,
-	}
-	// 调用 Create 方法将用户保存到数据库
-	_, err = a.Create(newUser)
-	if err != nil {
-		logs.Error("Failed to create user:", err)
-		return nil, errors.InternalServer("failed to create user")
-	}
-	return newUser, nil
 }
