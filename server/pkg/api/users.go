@@ -36,12 +36,31 @@ func (a *UsersAPI) Create(c *gin.Context) {
 		return
 	}
 
-	createdUser, err := usersSvc.Register(item.Name, item.Email, item.Password, item.School)
+	id, err := usersSvc.Create(item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, createdUser)
+	ginx.ResSuccess(c, id)
+}
+
+// Create 创建用户
+func (a *UsersAPI) Register(c *gin.Context) {
+	var item schema.UsersItem
+
+	if err := c.ShouldBindJSON(&item); err != nil {
+		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
+		return
+	}
+
+	item.Level = 1
+
+	id, err := usersSvc.Create(item)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+	ginx.ResSuccess(c, id)
 }
 
 // Update 更新用户信息

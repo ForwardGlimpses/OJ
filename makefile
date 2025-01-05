@@ -17,7 +17,7 @@ frontend:
 .PHONY: backend
 backend:
     @echo "Building backend..."
-    cd $(BACKEND_DIR) && go build -o oj-backend ./cmd/main.go
+    cd $(BACKEND_DIR) && go build -o server ./cmd/main.go
 
 # 启动前端开发服务器
 .PHONY: start-frontend
@@ -29,17 +29,4 @@ start-frontend:
 .PHONY: start-backend
 start-backend:
     @echo "Starting backend server..."
-    cd $(BACKEND_DIR) && go run ./cmd/main.go start -c $(CONFIG_FILE)
-
-# 初始化数据库
-.PHONY: initdb
-initdb:
-    @echo "Initializing database..."
-    cd $(BACKEND_DIR)/tool/initdb && go run main.go
-
-# 清理目标
-.PHONY: clean
-clean:
-    @echo "Cleaning up..."
-    cd $(FRONTEND_DIR) && rm -rf node_modules dist
-    cd $(BACKEND_DIR) && rm -f oj-backend
+    go run "C:/Users/乔书祥/Desktop/OJ/server/cmd/main.go" start -c "C:/Users/乔书祥/Desktop/OJ/server/configs/configs.json"

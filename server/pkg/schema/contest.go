@@ -1,15 +1,17 @@
 package schema
 
 import (
+	"time"
+
 	"github.com/jinzhu/copier"
 )
 
 type ContestItem struct {
 	ID            int `json:"id"`
 	Title         string
-	Private      string
-	StartTime    string
-	EndTime      string
+	Private       string
+	StartTime     time.Time
+	EndTime       time.Time
 	Password      string
 	Administrator string
 	Description   string
@@ -19,8 +21,8 @@ type ContestDBItem struct {
 	ID            int
 	Title         string
 	Private       string
-	Start_time    string
-	End_time      string
+	Start_time    time.Time
+	End_time      time.Time
 	Password      string
 	Administrator string
 	Description   string

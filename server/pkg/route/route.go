@@ -58,7 +58,8 @@ func RegisterUsers(g *gin.RouterGroup) {
 	gGroup := g.Group("users")
 	api := api.UsersAPI{}
 	gGroup.GET(":id", api.Get)
-	gGroup.POST("", middleware.Authentication(2), api.Create)
+	gGroup.POST("register", api.Register)
+	gGroup.POST("",middleware.Authentication(2), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
 	gGroup.DELETE(":id", middleware.Authentication(2), api.Delete)
 }

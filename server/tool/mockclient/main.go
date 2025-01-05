@@ -19,33 +19,33 @@ type LoginResponse struct {
 
 // CreateProblemResponse 结构体
 type CreateProblemResponse struct {
-	ID int `json:"id"`
+	Data int `json:"data"`
 }
 
 // CreateUserResponse 结构体
 type CreateUserResponse struct {
-	ID int `json:"id"`
+	Data int `json:"data"`
 }
 
 func main() {
 	baseURL := "http://127.0.0.1:8080/api"
 
+    // 模拟用户登录
+	token := login(baseURL, "joe@example.com", "password123")
+	
 	// 模拟用户注册
 	userID := registerUser(baseURL, schema.UsersItem{
 		Name:     "joe",
-		Lever:    2,
+		Level:    1,
 		Email:    "joe@example.com",
 		Password: "password123",
 		School:   "zzsd",
 	})
 
 	fmt.Println("用户:", userID)
-	// 模拟用户登录
-	token := login(baseURL, "joe@example.com", "password123")
+	
 
 	fmt.Println("Token值:", token)
-	// 模拟获取题目列表
-	getProblems(baseURL, token)
 
 	// 模拟创建题目
 	problemID := createProblem(baseURL, token, schema.ProblemItem{
@@ -68,18 +68,15 @@ func main() {
 		SampleOutput: "Updated sample output",
 	})
 
-	// 模拟删除题目
-	deleteProblem(baseURL, token, problemID)
-
 	// 模拟提交解决方案
-	submitSolution(baseURL, token, schema.SolutionItem{
-		ProblemID: problemID,
+	submitSolution(baseURL, token, schema.Submit{
+		ID:        problemID,
 		UserID:    userID,
-		Status:    "Pending",
+		InputCode: "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a + b << endl;\n}",
 	})
 
-	// 模拟获取用户列表
-	getUsers(baseURL, token)
+	// 模拟删除题目
+	deleteProblem(baseURL, token, problemID)
 
 	// 模拟更新用户
 	updateUser(baseURL, token, userID, schema.UsersItem{
@@ -100,7 +97,7 @@ func registerUser(baseURL string, user schema.UsersItem) int {
 		return 0
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s/register", baseURL), "application/json", reader)
+	resp, err := http.Post(fmt.Sprintf("%s/users", baseURL), "application/json", reader)
 	if err != nil {
 		fmt.Println("Error registering user:", err)
 		return 0
@@ -123,7 +120,7 @@ func registerUser(baseURL string, user schema.UsersItem) int {
 	}
 
 	fmt.Println("Registered User:", string(body))
-	return createUserResponse.ID
+	return createUserResponse.Data
 }
 
 func login(baseURL, email, password string) string {
@@ -163,31 +160,6 @@ func login(baseURL, email, password string) string {
 	return loginResponse.Token
 }
 
-func getProblems(baseURL, token string) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/problem", baseURL), nil)
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error getting problems:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return
-	}
-
-	fmt.Println("Problems:", string(body))
-}
-
 func createProblem(baseURL, token string, problem schema.ProblemItem) int {
 	reader, err := marshalToReader(problem)
 	if err != nil {
@@ -196,6 +168,7 @@ func createProblem(baseURL, token string, problem schema.ProblemItem) int {
 	}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/problem", baseURL), reader)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return 0
@@ -227,7 +200,7 @@ func createProblem(baseURL, token string, problem schema.ProblemItem) int {
 	}
 
 	fmt.Println("Created Problem:", string(body))
-	return createProblemResponse.ID
+	return createProblemResponse.Data
 }
 
 func updateProblem(baseURL, token string, id int, problem schema.ProblemItem) {
@@ -238,6 +211,7 @@ func updateProblem(baseURL, token string, id int, problem schema.ProblemItem) {
 	}
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/problem/%d", baseURL, id), reader)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
@@ -264,6 +238,7 @@ func updateProblem(baseURL, token string, id int, problem schema.ProblemItem) {
 
 func deleteProblem(baseURL, token string, id int) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/problem/%d", baseURL, id), nil)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
@@ -287,14 +262,15 @@ func deleteProblem(baseURL, token string, id int) {
 	fmt.Println("Delete problem response:", string(body)) // 添加调试信息
 }
 
-func submitSolution(baseURL, token string, solution schema.SolutionItem) {
-	reader, err := marshalToReader(solution)
+func submitSolution(baseURL, token string, submit schema.Submit) {
+	reader, err := marshalToReader(submit)
 	if err != nil {
 		fmt.Println("Error marshaling solution:", err)
 		return
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/problem/%d/submit", baseURL, solution.ProblemID), reader)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/problem/%d", baseURL, submit.ID), reader)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
@@ -319,31 +295,6 @@ func submitSolution(baseURL, token string, solution schema.SolutionItem) {
 	fmt.Println("Submit solution response:", string(body)) // 添加调试信息
 }
 
-func getUsers(baseURL, token string) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/users", baseURL), nil)
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error getting users:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return
-	}
-
-	fmt.Println("Users response:", string(body)) // 添加调试信息
-}
-
 func updateUser(baseURL, token string, id int, user schema.UsersItem) {
 	reader, err := marshalToReader(user)
 	if err != nil {
@@ -352,6 +303,7 @@ func updateUser(baseURL, token string, id int, user schema.UsersItem) {
 	}
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/users/%d", baseURL, id), reader)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
@@ -378,6 +330,7 @@ func updateUser(baseURL, token string, id int, user schema.UsersItem) {
 
 func deleteUser(baseURL, token string, id int) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/users/%d", baseURL, id), nil)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return

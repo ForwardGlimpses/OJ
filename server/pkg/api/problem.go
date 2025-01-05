@@ -35,11 +35,12 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _, err := problemSvc.Create(&item); err != nil {
+	id, err := problemSvc.Create(&item)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, id)
 }
 
 // Update 更新题目
@@ -54,7 +55,7 @@ func (a *ProblemAPI) Update(c *gin.Context) {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 // Delete 删除题目
@@ -69,17 +70,12 @@ func (a *ProblemAPI) Delete(c *gin.Context) {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "删除成功")
+	ginx.ResOK(c)
 }
 
 func (a *ProblemAPI) Submit(c *gin.Context) {
-	// 从请求中获取提交数据
-	var input struct {
-		ProblemID int    `json:"id"`        // 题目 ID
-		UserID    int    `json:"userid"`    // 用户 ID
-		InputCode string `json:"inputcode"` // 用户提交的代码
-	}
 
+	var input schema.Submit
 	// 绑定请求体数据到 input 结构体
 	if err := c.ShouldBindJSON(&input); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
@@ -87,10 +83,10 @@ func (a *ProblemAPI) Submit(c *gin.Context) {
 	}
 
 	// 日志记录提交请求
-	logs.Infof("用户 %d 提交了题目 %d 的代码", input.UserID, input.ProblemID)
+	logs.Infof("用户 %d 提交了题目 %d 的代码", input.UserID, input.ID)
 
 	// 调用 ProblemService 中的 Submit 方法，处理代码提交
-	submissionID, err := service.ProblemSvc.Submit(input.ProblemID, input.UserID, input.InputCode)
+	submissionID, err := service.ProblemSvc.Submit(input.ID, input.UserID, input.InputCode)
 	if err != nil {
 		// 如果提交失败，记录并返回错误信息
 		ginx.ResError(c, err)

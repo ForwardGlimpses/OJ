@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"github.com/jinzhu/copier"
 )
 
@@ -12,7 +14,7 @@ type ProblemItem struct {
 	Output       string
 	SampleInput  string
 	SampleOutput string
-	Indate       string
+	Indate       time.Time
 	TimeLimit    string
 	MemoryLimit  string
 	Accepted     int
@@ -28,7 +30,7 @@ type ProblemDBItem struct {
 	Output       string
 	SampleInput  string
 	SampleOutput string
-	Indate       string
+	Indate       time.Time
 	TimeLimit    string
 	MemoryLimit  string
 	Accepted     int
@@ -76,4 +78,10 @@ type ProblemParams struct {
 	ProblemID int
 	Title     string
 	P
+}
+
+type Submit struct {
+	ID        int    `json:"id"`        // 题目 ID
+	UserID    int    `json:"userid"`    // 用户 ID
+	InputCode string `json:"inputcode"` // 用户提交的代码
 }

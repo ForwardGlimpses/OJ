@@ -1,31 +1,33 @@
 package schema
 
 import (
+	"time"
+
 	"github.com/jinzhu/copier"
 )
 
 type UsersItem struct {
 	ID         int `json:"id"`
 	Name       string
-	Lever      int
+	Level      int
 	Email      string
 	Submit     int
 	Solved     int
 	Password   string
 	School     string
-	Accesstime string
+	Accesstime time.Time
 }
 
 type UsersDBItem struct {
 	ID         int
 	Name       string
-	Lever      int
+	Level      int
 	Email      string
 	Submit     int
 	Solved     int
 	Password   string
 	School     string
-	Accesstime string
+	Accesstime time.Time
 }
 
 func (a *UsersItem) ToDBItem() *UsersDBItem {

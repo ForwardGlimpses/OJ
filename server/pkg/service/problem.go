@@ -73,12 +73,13 @@ func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
 // Create 将 ProblemItem 转换为 ProblemDBItem 并存入数据库
 func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
-	err := db.Create(item.ToDBItem()).Error
+	dbItem := item.ToDBItem()
+	err := db.Create(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to create problem:", err)
 		return 0, err
 	}
-	return item.ID, nil
+	return dbItem.ID, nil
 }
 
 // Update 更新题目信息
@@ -259,14 +260,14 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		ProblemID: id,
 		UserID:    userId,
 		Status:    status,
-		// Time:      judgeRespons,
-		// Memory:    judgeResponse.Memory,
-		//Indate:     ,
-		//Language:   judgeResponse.Language,
-		//Codelength: judgeResponse.Codelength,
+		Time:      judgeResponse2[0].Time,
+		Memory:    judgeResponse2[0].Memory,
+		Indate:     time.Now(),
+		//Language:   judgeResponse2[0].,
+		//Codelength: judgeResponse2[0].Codelength,
 		//Juagetime:  juagetime,
 		//Juager:     juager,
-		//Passrate:   passrate,
+		//Passrate:   ,
 	}
 	//改成solution的creat创建
 	err = SolutionSvc.Update(submissionId, submission)

@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"github.com/jinzhu/copier"
 )
 
@@ -11,7 +13,7 @@ type SolutionItem struct {
 	Time       uint64
 	Memory     uint64
 	Status     string
-	InDate     string
+	Indate     time.Time
 	Language   string
 	Codelength string
 	Judgetime  string
@@ -26,7 +28,7 @@ type SolutionDBItem struct {
 	Time       uint64
 	Memory     uint64
 	Status     string
-	Indate     string
+	Indate     time.Time
 	Language   string
 	Codelength string
 	Judgetime  string

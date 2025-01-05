@@ -5,13 +5,11 @@ import (
 )
 
 type ContestProblemItem struct {
-	ID        int
-	ProblemID int
-	ContestID string
+	ID        int `json:"id"`
+	ContestID int
 	Title     string
-	Num       int
-	Accepted  string
-	Submited  string
+	Accepted  int
+	Submited  int
 }
 
 func (a *ContestProblemItem) ToDBItem() *ContestProblemDBItem {
@@ -32,12 +30,10 @@ func (a ContestProblemItems) ToDBItems() ContestProblemDBItems {
 
 type ContestProblemDBItem struct {
 	ID        int
-	ProblemID int
-	ContestID string
+	ContestID int
 	Title     string
-	Num       int
-	Accepted  string
-	Submit    string
+	Accepted  int
+	Submit    int
 }
 
 func (a *ContestProblemDBItem) TableName() string {
