@@ -262,12 +262,9 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		Status:    status,
 		Time:      judgeResponse2[0].Time,
 		Memory:    judgeResponse2[0].Memory,
-		Indate:     time.Now(),
-		//Language:   judgeResponse2[0].,
-		//Codelength: judgeResponse2[0].Codelength,
-		//Juagetime:  juagetime,
-		//Juager:     juager,
-		//Passrate:   ,
+		Indate:    time.Now(),
+		Language:  "C",
+		Passrate:  judgeResponse2[0].RunTime,
 	}
 	//改成solution的creat创建
 	err = SolutionSvc.Update(submissionId, submission)

@@ -7,7 +7,7 @@ import (
 )
 
 type ProblemItem struct {
-	ID           int
+	ID           int `json:"id"`
 	Title        string
 	Description  string
 	Input        string
@@ -23,7 +23,7 @@ type ProblemItem struct {
 }
 
 type ProblemDBItem struct {
-	ID           int `json:"id"`
+	ID           int 
 	Title        string
 	Description  string
 	Input        string

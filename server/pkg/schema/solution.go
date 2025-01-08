@@ -7,33 +7,29 @@ import (
 )
 
 type SolutionItem struct {
-	ID         int `json:"id"`
-	ProblemID  int
-	UserID     int
-	Time       uint64
-	Memory     uint64
-	Status     string
-	Indate     time.Time
-	Language   string
-	Codelength string
-	Judgetime  string
-	Judger     string
-	Passrate   string
+	ID        int `json:"id"`
+	ProblemID int
+	UserID    int
+	Time      uint64
+	Memory    uint64
+	Status    string
+	Indate    time.Time
+	Language  string
+	Judger    string
+	Passrate  uint64
 }
 
 type SolutionDBItem struct {
-	ID         int `gorm:"primary_key;auto_increment"`
-	ProblemID  int
-	UserID     int
-	Time       uint64
-	Memory     uint64
-	Status     string
-	Indate     time.Time
-	Language   string
-	Codelength string
-	Judgetime  string
-	Judger     string
-	Passrate   string
+	ID        int `gorm:"primary_key;auto_increment"`
+	ProblemID int
+	UserID    int
+	Time      uint64
+	Memory    uint64
+	Status    string
+	Indate    time.Time
+	Language  string
+	Judger    string
+	Passrate  uint64
 }
 
 func (a *SolutionItem) ToDBItem() *SolutionDBItem {
