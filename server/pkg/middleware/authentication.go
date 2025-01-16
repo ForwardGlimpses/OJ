@@ -28,25 +28,15 @@ func Authentication(requiredLevel int) gin.HandlerFunc {
 		}
 
 		// 根据 token 获取用户 ID
-		userId, err := loginSvc.GetUserId(token)
+		userId, userLevel, err := loginSvc.GetUserInfo(token)
 		if err != nil {
 			ginx.ResError(c, errors.AuthFailed("Invalid token"))
-			c.Abort() // 如果获取用户 ID 失败，终止后续处理
-			return
-		}
-
-		// 获取用户的 Level 信息
-		userLevel, err := loginSvc.GetUserLevel(userId)
-		if err != nil {
-			ginx.ResError(c, errors.AuthFailed("Unable to fetch user level"))
-			c.Abort() // 如果获取用户 level 失败，终止后续处理
 			return
 		}
 
 		// 判断用户是否有权限访问该接口
 		if userLevel < requiredLevel {
 			ginx.ResError(c, errors.AuthFailed("User does not have the required permissions"))
-			c.Abort() // 如果用户权限不足，终止后续处理
 			return
 		}
 
@@ -54,8 +44,5 @@ func Authentication(requiredLevel int) gin.HandlerFunc {
 		ctx := c.Request.Context()
 		ctx = context.WithValue(ctx, "user_id", userId)
 		c.Request = c.Request.WithContext(ctx)
-
-		// 继续处理请求
-		c.Next()
 	}
 }

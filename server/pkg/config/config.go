@@ -35,6 +35,7 @@ var C Config
 type Config struct {
 	Mysql Mysql
 	OJ    OjConfig
+	Root  Root
 }
 
 type Mysql struct {
@@ -43,11 +44,16 @@ type Mysql struct {
 	Host     string
 	Port     int
 	DBName   string
+	Debug    bool
 }
 
 type OjConfig struct {
 	Host string
 	Port int
+}
+type Root struct {
+	Email    string
+	Password string
 }
 
 func (a Mysql) DSN() string {

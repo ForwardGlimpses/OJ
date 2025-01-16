@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// 自动迁移：创建表结构
-	err = db.AutoMigrate(&schema.UsersDBItem{}, &schema.ContestDBItem{}, &schema.ContestProblemDBItem{}, &schema.ProblemDBItem{}, &schema.SolutionDBItem{}, &schema.SourceCodeDBItem{})
+	err = db.AutoMigrate(&schema.UsersDBItem{}, &schema.ContestDBItem{}, &schema.ContestSolutionDBItem{}, &schema.ContestProblemDBItem{}, &schema.ProblemDBItem{}, &schema.SolutionDBItem{}, &schema.SourceCodeDBItem{})
 	if err != nil {
 		logs.Error("创建表失败:", err)
 		return

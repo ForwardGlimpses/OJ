@@ -4,12 +4,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
-	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 var jwtSecret = []byte("your-secure-secret-key") // JWT 密钥，可以存储在配置文件中
@@ -17,8 +17,7 @@ var jwtSecret = []byte("your-secure-secret-key") // JWT 密钥，可以存储在
 type LoginServiceInterface interface {
 	Login(email, password string) (token string, err error)
 	Logout(token string) (err error)
-	GetUserId(token string) (userId int, err error)
-	GetUserLevel(userId int) (int, error)
+	GetUserInfo(token string) (userId int, userLevel int, err error)
 }
 
 var LoginSvc LoginServiceInterface = &LoginService{}
@@ -30,6 +29,7 @@ type LoginService struct {
 
 type TokenInfo struct {
 	UserId     int
+	Level      int
 	Expiration time.Time
 }
 
@@ -68,14 +68,27 @@ func validateJWT(tokenString string) (int, error) {
 
 // 用户登录，生成 JWT Token
 func (a *LoginService) Login(email, password string) (string, error) {
-	user, err := UserSvc.GetWithEmail(email) // 获取用户信息
-	if err != nil {
-		return "", err
-	}
 
-	// 验证密码
-	if err := checkPassword(user.Password, password); err != nil {
-		return "", errors.AuthFailed("password error")
+	var user *schema.UsersItem
+	var err error
+	if email == config.C.Root.Email && password == config.C.Root.Password {
+		logs.Info("Root login")
+		user = &schema.UsersItem{
+			ID:       0,
+			Email:    config.C.Root.Email,
+			Password: config.C.Root.Password,
+			Level:    3,
+		}
+	} else {
+		logs.Info("User login")
+		user, err = UserSvc.GetWithEmail(email) // 获取用户信息
+		if err != nil {
+			return "", err
+		}
+		// 验证密码
+		if err := checkPassword(user.Password, password); err != nil {
+			return "", errors.AuthFailed("password error")
+		}
 	}
 
 	// 生成 JWT token
@@ -87,7 +100,9 @@ func (a *LoginService) Login(email, password string) (string, error) {
 	// 存储 token 信息
 	a.tokenMap.Store(token, TokenInfo{
 		UserId:     user.ID,
+		Level:      user.Level,
 		Expiration: time.Now().Add(time.Hour), // Token 有效期设置为 1 小时
+
 	})
 	return token, nil
 }
@@ -102,44 +117,28 @@ func (a *LoginService) Logout(token string) error {
 }
 
 // 获取用户 ID，验证 Token 是否有效
-func (a *LoginService) GetUserId(token string) (int, error) {
+func (a *LoginService) GetUserInfo(token string) (int, int, error) {
 	// 验证 JWT Token 是否有效并提取用户 ID
-	userID, err := validateJWT(token)
+	_, err := validateJWT(token)
 	if err != nil {
-		return 0, errors.AuthFailed("invalid or expired token")
+		return 0, 0, errors.AuthFailed("invalid or expired token")
 	}
 
 	// 检查 token 是否仍然有效
 	value, ok := a.tokenMap.Load(token)
 	if !ok {
-		return 0, errors.AuthFailed("token not found")
+		return 0, 0, errors.AuthFailed("token not found")
 	}
 
 	tokenInfo := value.(TokenInfo)
 	now := time.Now()
 	if tokenInfo.Expiration.Before(now) {
-		return 0, errors.AuthFailed("token expired")
+		return 0, 0, errors.AuthFailed("token expired")
 	}
 
 	// 延长 token 的有效期
 	tokenInfo.Expiration = now.Add(time.Hour)
 	a.tokenMap.Store(token, tokenInfo)
 
-	return userID, nil
-}
-
-// 获取用户 Level
-func (a *LoginService) GetUserLevel(userId int) (int, error) {
-	var level int
-
-	// 使用 gorm 查询用户的 level
-	err := global.DB.Model(&schema.UsersDBItem{}).Where("id = ?", userId).Pluck("level", &level).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return 0, errors.InternalServer("User not found or has no level")
-		}
-		return 0, errors.InternalServer("Failed to get user level: %v", err)
-	}
-
-	return level, nil
+	return tokenInfo.UserId, tokenInfo.Level, nil
 }

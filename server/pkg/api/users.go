@@ -66,12 +66,17 @@ func (a *UsersAPI) Register(c *gin.Context) {
 // Update 更新用户信息
 func (a *UsersAPI) Update(c *gin.Context) {
 	var item schema.UsersItem
+	var id schema.ID
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	if err := usersSvc.Update(item.ID, &item); err != nil {
+	if err := usersSvc.Update(id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -10,6 +12,26 @@ import (
 )
 
 type ContestProblemAPI struct{}
+
+func (a *ContestProblemAPI) Query(c *gin.Context) {
+	var params schema.ContestProblemParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+	items, total, err := contestProblemSvc.Query(params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.ContestProblemItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
 
 // Get 获取指定ID的比赛问题信息
 func (a *ContestProblemAPI) Get(c *gin.Context) {
@@ -29,32 +51,40 @@ func (a *ContestProblemAPI) Get(c *gin.Context) {
 
 // Create 创建新的比赛问题
 func (a *ContestProblemAPI) Create(c *gin.Context) {
-	var item *schema.ContestProblemItem
-	if err := c.ShouldBindJSON(item); err != nil {
+	var item schema.ContestProblemItem
+
+	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
+		fmt.Println("item err ", err)
 		return
 	}
 
-	if _, err := contestProblemSvc.Create(item); err != nil {
+	id, err := contestProblemSvc.Create(&item)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, id)
 }
 
 // Update 更新指定ID的比赛问题信息
 func (a *ContestProblemAPI) Update(c *gin.Context) {
 	var item schema.ContestProblemItem
-	if err := c.ShouldBindJSON(item); err != nil {
+	var id schema.ID
+	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	if err := contestProblemSvc.Update(item.ID, &item); err != nil {
+	if err := contestProblemSvc.Update(id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 // Delete 删除指定ID的比赛问题

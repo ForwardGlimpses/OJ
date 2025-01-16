@@ -21,8 +21,8 @@ type ContestDBItem struct {
 	ID            int
 	Title         string
 	Private       string
-	Start_time    time.Time
-	End_time      time.Time
+	StartTime     time.Time
+	EndTime       time.Time
 	Password      string
 	Administrator string
 	Description   string

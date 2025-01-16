@@ -45,12 +45,17 @@ func (s *SolutionAPI) Create(c *gin.Context) {
 // Update 更新解决方案
 func (s *SolutionAPI) Update(c *gin.Context) {
 	var item schema.SolutionItem
+	var id schema.ID
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	if err := solutionSvc.Update(item.ID, &item); err != nil {
+	if err := solutionSvc.Update(id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

@@ -46,12 +46,17 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 // Update 更新题目
 func (a *ProblemAPI) Update(c *gin.Context) {
 	var item schema.ProblemItem
+	var id schema.ID
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	if err := problemSvc.Update(item.ID, &item); err != nil {
+	if err := problemSvc.Update(id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

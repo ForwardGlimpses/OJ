@@ -57,3 +57,4 @@
 {"level":"info","msg":"Successfully retrieved problem with ID:14","time":"2025-01-04T21:06:16+08:00"}
 {"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":258694100,\"memory\":42110976,\"runTime\":260151314,\"files\":{\"stderr\":\"\",\"stdout\":\"\"},\"fileIds\":{\"50\":\"TXD2WGTE\"}}]\n","time":"2025-01-04T21:06:17+08:00"}
 {"level":"info","msg":"Response Body:[{\"status\":\"Accepted\",\"exitStatus\":0,\"time\":1746900,\"memory\":290816,\"runTime\":2214292,\"files\":{\"stderr\":\"\",\"stdout\":\"2\\n\"}}]\n","time":"2025-01-04T21:06:17+08:00"}
+{"level":"info","msg":"User login","time":"2025-01-13T13:49:07+08:00"}

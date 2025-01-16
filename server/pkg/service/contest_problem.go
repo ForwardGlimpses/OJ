@@ -64,18 +64,20 @@ func (a *ContestProblemService) Get(id int) (*schema.ContestProblemItem, error) 
 // Create 创建新的比赛问题
 func (a *ContestProblemService) Create(item *schema.ContestProblemItem) (int, error) {
 	db := global.DB.WithContext(context.Background())
-	err := db.Create(item.ToDBItem()).Error
+	dbItem := item.ToDBItem()
+	err := db.Create(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to create contest problem:", err)
 		return 0, err
 	}
-	return item.ID, nil
+	return dbItem.ID, nil
 }
 
 // Update 更新比赛问题信息
 func (a *ContestProblemService) Update(id int, item *schema.ContestProblemItem) error {
 	db := global.DB.WithContext(context.Background())
-	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+	dbItem := item.ToDBItem()
+	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update contest problem with ID:", id, "Error:", err)
 		return err

@@ -19,9 +19,9 @@ type P struct {
 	PageSize int
 }
 
-type PaginatedParams struct {
-	Items      []ContestItem // 当前页的数据
-	TotalCount int64         // 总记录数
-	Page       int           // 当前页码
-	PageSize   int           // 每页条数
+type QueryResult[T any] struct {
+	Items      T     // 当前页的数据
+	TotalCount int64 // 总记录数
+	Page       int   // 当前页码
+	PageSize   int   // 每页条数
 }

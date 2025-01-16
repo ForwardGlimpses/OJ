@@ -33,25 +33,31 @@ func (a *ContestAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _, err := contestSvc.Create(&item); err != nil {
+	id, err := contestSvc.Create(&item)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, id)
 }
 
 func (a *ContestAPI) Update(c *gin.Context) {
 	var item schema.ContestItem
+	var id schema.ID
 	if err := c.ShouldBindJSON(&item); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	if err := contestSvc.Update(item.ID, &item); err != nil {
+	if err := contestSvc.Update(id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 func (a *ContestAPI) Delete(c *gin.Context) {
@@ -65,5 +71,5 @@ func (a *ContestAPI) Delete(c *gin.Context) {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "删除成功")
+	ginx.ResOK(c)
 }

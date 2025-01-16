@@ -19,5 +19,8 @@ func Init() error {
 	if err != nil {
 		return err
 	}
+	if config.C.Mysql.Debug {
+		DB = DB.Debug()
+	}
 	return nil
 }

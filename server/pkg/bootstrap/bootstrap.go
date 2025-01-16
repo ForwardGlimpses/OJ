@@ -27,6 +27,7 @@ func Run() error {
 	gApi := g.Group("api")
 
 	route.RegisterProblem(gApi)
+	route.RegisterContestSolution(gApi)
 	route.RegisterContestProblem(gApi)
 	route.RegisterContest(gApi)
 	route.RegisterSourceCode(gApi)

@@ -1,13 +1,18 @@
 {
-    "Mysql": {
-        "User":  "root",
-	    "Password": "111111",
-	    "Host":     "127.0.0.1",
-	    "Port":     3306,
-	    "DBName":   "ojmysql"
-    },
-	"OJ":{
-		"Host":"127.0.0.1",
-		"Port":5050
-	}
+  "Mysql": {
+    "User": "root",
+    "Password": "111111",
+    "Host": "127.0.0.1",
+    "Port": 3306,
+    "DBName": "ojmysql",
+    "Debug": true
+  },
+  "OJ": {
+    "Host": "127.0.0.1",
+    "Port": 5050
+  },
+  "Root": {
+    "Email": "joesx@qq.com",
+    "Password": "111111"
+  }
 }
