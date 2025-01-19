@@ -1,20 +1,15 @@
 package service
 
 import (
-	"bytes"
-	"context"
-	"encoding/json" // 导入 json 包
+	"context" // 导入 json 包
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/judge"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-	model "github.com/criyle/go-judge/cmd/go-judge/model"
 	//"github.com/google/uuid"
 )
 
@@ -108,7 +103,7 @@ func (a *ProblemService) Delete(id int) error {
 	return nil
 }
 
-func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, error) {
+func (a *ProblemService) Submit(id int, userId int, code string) (int, error) {
 
 	//db := global.DB.WithContext(context.Background())
 
@@ -131,92 +126,28 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		return 0, err
 	}
 
-	fileName := fmt.Sprintf("%d", submissionId)
-	fileNameWithExtension := fileName + ".cc"
-	content := problem.Input
-	Stdout := "stdout"
-	Stderr := "stderr"
-	StoutMax := int64(10240)
-	StderrMax := int64(10240)
+	resp, err := judge.Submit(judge.Request{
+		ID:     submissionId,
+		Code:   code,
+		Input:  problem.Input,
+		Output: problem.Output,
+	})
 
-	// Step 2: 准备发送给 Judge 的请求体
-	judgeRequest1 := judge.JudgeRequest{
-		Cmd: []model.Cmd{
-			{
-				Args: []string{"/usr/bin/g++", fileNameWithExtension, "-o", fileName},
-				Env:  []string{"PATH=/usr/bin:/bin"},
-				Files: []*model.CmdFile{
-					{Content: &content},
-					{Name: &Stdout, Max: &StoutMax},
-					{Name: &Stderr, Max: &StderrMax},
-				},
-				CPULimit:    uint64(10 * time.Second), // 10 seconds
-				MemoryLimit: 104857600,                // 100 MB
-				ProcLimit:   50,
-				CopyIn: map[string]model.CmdFile{
-					fileNameWithExtension: {
-						Content: &inputCode,
-					},
-				},
-				CopyOut:       []string{"stdout", "stderr"},
-				CopyOutCached: []string{fileName}},
-		},
-	}
-	//fmt.Println(fileNameWithExtension, "---", fileName)
-
-	// Step 3: 发送请求到 Judge 系统
-
-	judgeResponses1, err := judge.SubmitToJudge(config.C.Judge.BaseURL(), judgeRequest1)
 	if err != nil {
-		logs.Error("Failed to send request to Judge system:", err)
+		logs.Error("Failed to judge:", err)
 		return 0, err
 	}
-
-	aValue := judgeResponses1.Results[0].FileIDs[fileName]
-	judgeRequest2 := judge.JudgeRequest{
-		Cmd: []model.Cmd{
-			{
-				Args: []string{fileName},
-				Env:  []string{"PATH=/usr/bin:/bin"},
-				Files: []*model.CmdFile{
-					{Content: &content},
-					{Name: &Stdout, Max: &StoutMax},
-					{Name: &Stderr, Max: &StderrMax},
-				},
-				CPULimit:    uint64(10 * time.Second), // 10 seconds
-				MemoryLimit: 104857600,                // 100 MB
-				ProcLimit:   50,
-				CopyIn: map[string]model.CmdFile{
-					fileName: {
-						FileID: &aValue,
-					},
-				},
-			},
-		},
-	}
-
-	judgeResponse2, err := judge.SubmitToJudge(config.C.Judge.BaseURL(), judgeRequest2)
-
-	// Step 5: 对比评测结果和标准答案
-	contentOutput := judgeResponse2.Results[0].Files["stdout"]
-	isCorrect := contentOutput == problem.Output
-	status := "Accepted"
-	if !isCorrect {
-		status = "Wrong Answer"
-	}
-	fmt.Println("程序输出", contentOutput)
-	fmt.Println("样例输出", problem.Output)
 
 	// Step 6: 将评测结果存储到数据库
 	submission = &schema.SolutionItem{
 		ProblemID: id,
 		UserID:    userId,
-		Status:    status,
-		Time:      judgeResponse2.Results[0].Time,
-		Memory:    judgeResponse2.Results[0].Memory,
+		Status:    resp.Status,
+		Time:      resp.Time,
+		Memory:    resp.Memory,
 		Indate:    time.Now(),
 		Language:  "C",
-		Passrate:  judgeResponse2.Results[0].RunTime,
+		Passrate:  resp.RunTime, // 这里为什么使用 RunTime ？
 	}
 	//改成solution的creat创建
 	err = SolutionSvc.Update(submissionId, submission)
@@ -227,14 +158,4 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 
 	// Step 7: 返回提交记录的 ID
 	return submissionId, nil
-}
-
-// 将结构体编码成 JSON 并返回一个 io.Reader
-func marshalToReader(v interface{}) (io.Reader, error) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		logs.Error("Failed to marshal JSON:", err)
-		return nil, err
-	}
-	return bytes.NewReader(data), nil
 }

@@ -1,49 +1,31 @@
 package judge
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-
-	"github.com/criyle/go-judge/cmd/go-judge/model"
-)
-
-// JudgeRequest 发送给判题机的请求体
-type JudgeRequest struct {
-	Cmd []model.Cmd `json:"cmd"`
+func Init() {
+	// 初始化的时候从 config 中读取地址相关信息传进去
+	judge = newHTTPClient()
+	// TODO: 支持 grpc 客户端
 }
 
-// JudgeResponse 判题机的响应体
-type JudgeResponse struct {
-	Results []model.Result `json:"results"`
+type judgeInterface interface {
+	Submit(req Request) (Response, error)
 }
 
-// SubmitToJudge 提交代码到判题机
-func SubmitToJudge(judgeURL string, request JudgeRequest) (JudgeResponse, error) {
-	var response JudgeResponse
+var judge judgeInterface
 
-	data, err := json.Marshal(request)
-	if err != nil {
-		return response, fmt.Errorf("failed to marshal judge request: %v", err)
-	}
+type Request struct {
+	ID     int    // 提交的唯一标识
+	Code   string // 提交代码
+	Input  string // 输入
+	Output string // 输出
+}
 
-	resp, err := http.Post(judgeURL, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return response, fmt.Errorf("failed to submit to judge: %v", err)
-	}
-	defer resp.Body.Close()
+type Response struct {
+	Status  string // 判定结果
+	Memory  uint64 //  使用内存
+	Time    uint64 // 判断时间？
+	RunTime uint64 // 耗时？
+}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return response, fmt.Errorf("failed to read judge response: %v", err)
-	}
-
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return response, fmt.Errorf("failed to unmarshal judge response: %v", err)
-	}
-
-	return response, nil
+func Submit(req Request) (Response, error) {
+	return judge.Submit(req)
 }
