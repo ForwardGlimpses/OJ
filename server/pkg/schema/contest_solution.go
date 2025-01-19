@@ -17,6 +17,9 @@ type ContestSolutionItem struct {
 	Status      string    // 评测状态
 	RunTime     int       // 题目运行时间，单位为毫秒
 	Memory      int       // 题目运行内存，单位为KB
+	Language    string    // 语言
+	CodeLength  int       // 代码长度
+	Judger      string    // 评测机
 }
 
 type ContestSolutionDBItem struct {
@@ -30,6 +33,9 @@ type ContestSolutionDBItem struct {
 	Status      string    // 评测状态
 	RunTime     int       // 题目运行时间，单位为毫秒
 	Memory      int       // 题目运行内存，单位为KB
+	Language    string    // 语言
+	CodeLength  int       // 代码长度
+	Judger      string    // 评测机
 }
 
 func (a *ContestSolutionItem) ToDBItem() *ContestSolutionDBItem {

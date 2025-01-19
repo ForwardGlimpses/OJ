@@ -40,7 +40,6 @@ func (a *ContestProblemAPI) Get(c *gin.Context) {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
-
 	item, err := contestProblemSvc.Get(id.ID)
 	if err != nil {
 		ginx.ResError(c, err)

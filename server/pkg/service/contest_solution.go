@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"sort"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 type ContestSolutionServiceInterface interface {
 	GetContestSolutions(contestID int) (schema.ContestSolutionItems, error)
 	GetContestRanking(contestID int) ([]ContestRankingItem, error)
+	Create(item *schema.ContestSolutionItem) (int, error)
+	Update(id int, item *schema.ContestSolutionItem) error
+	Delete(id int) error
+	Submit(id int, userId int, inputCode string) (int, error)
 }
 
 var ContestSolutionSvc ContestSolutionServiceInterface = &ContestSolutionService{}
@@ -34,10 +39,45 @@ type ProblemStatus struct {
 	Memory      int
 }
 
+// Create 创建新的比赛解决方案
+func (a *ContestSolutionService) Create(item *schema.ContestSolutionItem) (int, error) {
+	db := global.DB.WithContext(context.Background())
+	dbItem := item.ToDBItem()
+	err := db.Create(dbItem).Error
+	if err != nil {
+		logs.Error("Failed to create contest solution:", err)
+		return 0, err
+	}
+	return dbItem.ID, nil
+}
+
+// Update 更新比赛解决方案信息
+func (a *ContestSolutionService) Update(id int, item *schema.ContestSolutionItem) error {
+	db := global.DB.WithContext(context.Background())
+	dbItem := item.ToDBItem()
+	err := db.Where("id = ?", id).Updates(dbItem).Error
+	if err != nil {
+		logs.Error("Failed to update contest solution with ID:", id, "Error:", err)
+		return err
+	}
+	return nil
+}
+
+// Delete 删除比赛解决方案
+func (a *ContestSolutionService) Delete(id int) error {
+	db := global.DB.WithContext(context.Background())
+	err := db.Where("id = ?", id).Delete(&schema.ContestSolutionDBItem{}).Error
+	if err != nil {
+		logs.Error("Failed to delete contest solution with ID:", id, "Error:", err)
+		return err
+	}
+	return nil
+}
+
 // GetContestSolutions 获取比赛的所有解决方案
 func (a *ContestSolutionService) GetContestSolutions(contestID int) (schema.ContestSolutionItems, error) {
 	var solutions schema.ContestSolutionDBItems
-	err := global.DB.Where("contest_id = ?", contestID).Find(&solutions).Error
+	err := global.DB.Where("contest_id = ?", contestID).Order("submit_time DESC").Find(&solutions).Error
 	if err != nil {
 		logs.Error("Failed to get contest solutions:", err)
 		return nil, err

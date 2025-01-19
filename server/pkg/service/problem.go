@@ -11,6 +11,7 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/config"
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
+	"github.com/ForwardGlimpses/OJ/server/pkg/judge"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
 	model "github.com/criyle/go-judge/cmd/go-judge/model"
@@ -139,7 +140,7 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	StderrMax := int64(10240)
 
 	// Step 2: 准备发送给 Judge 的请求体
-	judgeRequest1 := model.Request{
+	judgeRequest1 := judge.JudgeRequest{
 		Cmd: []model.Cmd{
 			{
 				Args: []string{"/usr/bin/g++", fileNameWithExtension, "-o", fileName},
@@ -164,37 +165,15 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 	//fmt.Println(fileNameWithExtension, "---", fileName)
 
 	// Step 3: 发送请求到 Judge 系统
-	body1, err := marshalToReader(judgeRequest1)
-	if err != nil {
-		logs.Error("Failed to marshal request body:", err)
-		return 0, err
-	}
-	ojBaseURL := config.C.OJ.BaseURL()
-	resp1, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body1)
 
+	judgeResponses1, err := judge.SubmitToJudge(config.C.Judge.BaseURL(), judgeRequest1)
 	if err != nil {
 		logs.Error("Failed to send request to Judge system:", err)
 		return 0, err
 	}
-	defer resp1.Body.Close()
 
-	bodya1, err := io.ReadAll(resp1.Body)
-	if err != nil {
-		logs.Error("Failed to read response body:", err)
-		return 0, err
-	}
-
-	logs.Info("Response Body:", string(bodya1)) //记录返回的 JSON 数据
-
-	var judgeResponses1 []model.Result
-	err = json.Unmarshal(bodya1, &judgeResponses1)
-	if err != nil {
-		logs.Error("Error parsing JSON response:", err)
-		return 0, err
-	}
-
-	aValue := judgeResponses1[0].FileIDs[fileName]
-	judgeRequest2 := model.Request{
+	aValue := judgeResponses1.Results[0].FileIDs[fileName]
+	judgeRequest2 := judge.JudgeRequest{
 		Cmd: []model.Cmd{
 			{
 				Args: []string{fileName},
@@ -216,37 +195,10 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		},
 	}
 
-	body2, err := marshalToReader(judgeRequest2)
-	if err != nil {
-		logs.Error("Failed to marshal request body:", err)
-		return 0, err
-	}
-
-	resp2, err := global.HttpClient.Post(ojBaseURL+"/run", "application/json", body2)
-
-	if err != nil {
-		logs.Error("Failed to send request to Judge system:", err)
-		return 0, err
-	}
-	defer resp2.Body.Close()
-
-	bodya2, err := io.ReadAll(resp2.Body)
-	if err != nil {
-		logs.Error("Failed to read response body:", err)
-		return 0, err
-	}
-
-	logs.Info("Response Body:", string(bodya2)) //记录返回的 JSON 数据
-	// Step 4: 解析 Judge 系统返回的结果
-	var judgeResponse2 []model.Result
-	err = json.Unmarshal(bodya2, &judgeResponse2)
-	if err != nil {
-		logs.Error("Error parsing JSON response:", err)
-		return 0, err
-	}
+	judgeResponse2, err := judge.SubmitToJudge(config.C.Judge.BaseURL(), judgeRequest2)
 
 	// Step 5: 对比评测结果和标准答案
-	contentOutput := judgeResponse2[0].Files["stdout"]
+	contentOutput := judgeResponse2.Results[0].Files["stdout"]
 	isCorrect := contentOutput == problem.Output
 	status := "Accepted"
 	if !isCorrect {
@@ -260,11 +212,11 @@ func (a *ProblemService) Submit(id int, userId int, inputCode string) (int, erro
 		ProblemID: id,
 		UserID:    userId,
 		Status:    status,
-		Time:      judgeResponse2[0].Time,
-		Memory:    judgeResponse2[0].Memory,
+		Time:      judgeResponse2.Results[0].Time,
+		Memory:    judgeResponse2.Results[0].Memory,
 		Indate:    time.Now(),
 		Language:  "C",
-		Passrate:  judgeResponse2[0].RunTime,
+		Passrate:  judgeResponse2.Results[0].RunTime,
 	}
 	//改成solution的creat创建
 	err = SolutionSvc.Update(submissionId, submission)

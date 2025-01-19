@@ -7,6 +7,7 @@ import (
 type ContestProblemItem struct {
 	ID        int `json:"id"`
 	ContestID int
+	ProblemID int
 	Title     string
 	Accepted  int
 	Submited  int
@@ -31,6 +32,7 @@ func (a ContestProblemItems) ToDBItems() ContestProblemDBItems {
 type ContestProblemDBItem struct {
 	ID        int
 	ContestID int
+	ProblemID int
 	Title     string
 	Accepted  int
 	Submit    int

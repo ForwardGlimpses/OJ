@@ -34,7 +34,7 @@ var C Config
 
 type Config struct {
 	Mysql Mysql
-	OJ    OjConfig
+	Judge JudgeConfig
 	Root  Root
 }
 
@@ -47,10 +47,11 @@ type Mysql struct {
 	Debug    bool
 }
 
-type OjConfig struct {
+type JudgeConfig struct {
 	Host string
 	Port int
 }
+
 type Root struct {
 	Email    string
 	Password string
@@ -61,6 +62,7 @@ func (a Mysql) DSN() string {
 		a.User, a.Password, a.Host, a.Port, a.DBName)
 }
 
-func (o OjConfig) BaseURL() string {
-	return fmt.Sprintf("http://%s:%d", o.Host, o.Port)
+func (j JudgeConfig) BaseURL() string {
+	return fmt.Sprintf("http://%s:%d/run", j.Host, j.Port)
 }
+

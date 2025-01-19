@@ -7,7 +7,7 @@
     "DBName": "ojmysql",
     "Debug": true
   },
-  "OJ": {
+  "Judge": {
     "Host": "127.0.0.1",
     "Port": 5050
   },
