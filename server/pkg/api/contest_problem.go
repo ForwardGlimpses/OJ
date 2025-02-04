@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
@@ -19,7 +21,11 @@ func (a *ContestProblemAPI) Query(c *gin.Context) {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
-	items, total, err := contestProblemSvc.Query(params)
+	//创建一个带有超时的上下文
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	items, total, err := contestProblemSvc.Query(ctx, params)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -40,7 +46,8 @@ func (a *ContestProblemAPI) Get(c *gin.Context) {
 		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
-	item, err := contestProblemSvc.Get(id.ID)
+	ctx := context.Background()
+	item, err := contestProblemSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -58,7 +65,9 @@ func (a *ContestProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := contestProblemSvc.Create(&item)
+	ctx := context.Background()
+
+	id, err := contestProblemSvc.Create(ctx, &item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -79,7 +88,9 @@ func (a *ContestProblemAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := contestProblemSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := contestProblemSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -94,7 +105,9 @@ func (a *ContestProblemAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := contestProblemSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := contestProblemSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

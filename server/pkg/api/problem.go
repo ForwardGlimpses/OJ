@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
@@ -19,7 +21,9 @@ func (a *ProblemAPI) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := problemSvc.Get(id.ID)
+	ctx := context.Background()
+
+	item, err := problemSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -35,7 +39,9 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := problemSvc.Create(&item)
+	ctx := context.Background()
+
+	id, err := problemSvc.Create(ctx, &item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -56,7 +62,9 @@ func (a *ProblemAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := problemSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := problemSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -71,7 +79,9 @@ func (a *ProblemAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := problemSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := problemSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -91,7 +101,15 @@ func (a *ProblemAPI) Submit(c *gin.Context) {
 	logs.Infof("用户 %d 提交了题目 %d 的代码", input.UserID, input.ID)
 
 	// 调用 ProblemService 中的 Submit 方法，处理代码提交
-	submissionID, err := service.ProblemSvc.Submit(input.ID, input.UserID, input.InputCode)
+
+	// ctx := context.Background()
+	// ctx = context.WithValue(ctx, "problemID", input.ID)
+	// cctx := context.WithValue(ctx, "userID", input.UserID)
+	// ccctx := cctx.Value("problemID")
+
+	ctx := context.Background()
+
+	submissionID, err := service.ProblemSvc.Submit(ctx, input.ID, input.UserID, input.InputCode)
 	if err != nil {
 		// 如果提交失败，记录并返回错误信息
 		ginx.ResError(c, err)
@@ -99,8 +117,5 @@ func (a *ProblemAPI) Submit(c *gin.Context) {
 	}
 
 	// 提交成功，返回提交 ID
-	ginx.ResSuccess(c, gin.H{
-		"submission_id": submissionID,
-		"message":       "提交成功",
-	})
+	ginx.ResSuccess(c, submissionID)
 }

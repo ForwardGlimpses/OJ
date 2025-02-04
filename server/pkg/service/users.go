@@ -13,12 +13,12 @@ import (
 )
 
 type UsersServiceInterface interface {
-	Get(id int) (*schema.UsersItem, error)
-	GetWithEmail(email string) (*schema.UsersItem, error)
-	Query(params schema.UsersParams) (schema.UsersItems, int64, error)
-	Update(id int, item *schema.UsersItem) error
-	Delete(id int) error
-	Create(schema.UsersItem) (int, error) // Register方法只需验证、处理和调用Create
+	Get(ctx context.Context, id int) (*schema.UsersItem, error)
+	GetWithEmail(ctx context.Context, email string) (*schema.UsersItem, error)
+	Query(ctx context.Context, params schema.UsersParams) (schema.UsersItems, int64, error)
+	Update(ctx context.Context, id int, item *schema.UsersItem) error
+	Delete(ctx context.Context, id int) error
+	Create(ctx context.Context, item schema.UsersItem) (int, error) // Register方法只需验证、处理和调用Create
 }
 
 var UserSvc UsersServiceInterface = &UsersService{}
@@ -26,9 +26,9 @@ var UserSvc UsersServiceInterface = &UsersService{}
 type UsersService struct{}
 
 // Query根据条件和分页查询获取用户列表
-func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, int64, error) {
+func (a *UsersService) Query(ctx context.Context, params schema.UsersParams) (schema.UsersItems, int64, error) {
 	// 初始化查询
-	query := global.DB.Model(&schema.UsersDBItem{})
+	query := global.DB.WithContext(ctx).Model(&schema.UsersDBItem{})
 
 	// 应用过滤条件
 	if params.Email != "" {
@@ -58,8 +58,8 @@ func (a *UsersService) Query(params schema.UsersParams) (schema.UsersItems, int6
 }
 
 // Get 获取用户信息
-func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *UsersService) Get(ctx context.Context, id int) (*schema.UsersItem, error) {
+	db := global.DB.WithContext(ctx)
 	item := &schema.UsersDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
@@ -70,8 +70,8 @@ func (a *UsersService) Get(id int) (*schema.UsersItem, error) {
 }
 
 // GetWithEmail 根据邮箱获取用户信息
-func (a *UsersService) GetWithEmail(email string) (*schema.UsersItem, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *UsersService) GetWithEmail(ctx context.Context, email string) (*schema.UsersItem, error) {
+	db := global.DB.WithContext(ctx)
 	item := &schema.UsersDBItem{}
 	err := db.Where("email = ?", email).First(item).Error
 	if err != nil {
@@ -82,7 +82,7 @@ func (a *UsersService) GetWithEmail(email string) (*schema.UsersItem, error) {
 }
 
 // 用户注册方法
-func (a *UsersService) Create(item schema.UsersItem) (int, error) {
+func (a *UsersService) Create(ctx context.Context, item schema.UsersItem) (int, error) {
 	// 哈希密码
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(item.Password), bcrypt.DefaultCost)
@@ -96,7 +96,7 @@ func (a *UsersService) Create(item schema.UsersItem) (int, error) {
 
 	dbItem := item.ToDBItem()
 	// 将用户数据保存到数据库
-	err = global.DB.WithContext(context.Background()).Create(dbItem).Error
+	err = global.DB.WithContext(ctx).Create(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to create user:", err)
 		return 0, errors.InternalServer("failed to create user")
@@ -106,9 +106,10 @@ func (a *UsersService) Create(item schema.UsersItem) (int, error) {
 }
 
 // Update 更新用户信息
-func (a *UsersService) Update(id int, item *schema.UsersItem) error {
-	db := global.DB.WithContext(context.Background())
-	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+func (a *UsersService) Update(ctx context.Context, id int, item *schema.UsersItem) error {
+	db := global.DB.WithContext(ctx)
+	dbItem := item.ToDBItem()
+	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update user with ID:", id, "Error:", err)
 		return err
@@ -117,8 +118,8 @@ func (a *UsersService) Update(id int, item *schema.UsersItem) error {
 }
 
 // Delete 删除用户
-func (a *UsersService) Delete(id int) error {
-	db := global.DB.WithContext(context.Background())
+func (a *UsersService) Delete(ctx context.Context, id int) error {
+	db := global.DB.WithContext(ctx)
 	err := db.Where("id = ?", id).Delete(&schema.UsersDBItem{}).Error
 	if err != nil {
 		logs.Error("Failed to delete user with ID:", id, "Error:", err)

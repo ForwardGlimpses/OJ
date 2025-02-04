@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
@@ -27,6 +28,8 @@ func (a *ContestSolutionAPI) Create(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+
 	submission := &schema.ContestSolutionItem{
 		ContestID:   req.ContestID,
 		ProblemID:   req.ProblemID,
@@ -36,7 +39,7 @@ func (a *ContestSolutionAPI) Create(c *gin.Context) {
 		PenaltyTime: 0,
 	}
 
-	id, err := service.ContestSolutionSvc.Create(submission)
+	id, err := service.ContestSolutionSvc.Create(ctx, submission)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -48,17 +51,24 @@ func (a *ContestSolutionAPI) Create(c *gin.Context) {
 func (a *ContestSolutionAPI) Submit(c *gin.Context) {
 
 	var input schema.Submit
+	var id schema.ID
 	// 绑定请求体数据到 input 结构体
 	if err := c.ShouldBindJSON(&input); err != nil {
 		ginx.ResError(c, errors.InvalidInput("无效的输入数据"))
 		return
 	}
 
+	if err := c.ShouldBindUri(&id); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 	// 日志记录提交请求
-	logs.Infof("用户 %d 提交了比赛题目 %d 的代码", input.UserID, input.ID)
+	logs.Infof("用户 %d 提交了题目 %d 的代码", input.UserID, input.ID)
+
+	ctx := context.Background()
 
 	// 调用 ProblemService 中的 Submit 方法，处理代码提交
-	submissionID, err := service.ContestSolutionSvc.Submit(input.ID, input.UserID, input.InputCode)
+	submissionID, err := service.ContestSolutionSvc.Submit(ctx, id.ID, &input)
 	if err != nil {
 		// 如果提交失败，记录并返回错误信息
 		ginx.ResError(c, err)
@@ -66,10 +76,8 @@ func (a *ContestSolutionAPI) Submit(c *gin.Context) {
 	}
 
 	// 提交成功，返回提交 ID
-	ginx.ResSuccess(c, gin.H{
-		"submission_id": submissionID,
-		"message":       "提交成功",
-	})
+	ginx.ResSuccess(c, submissionID)
+
 }
 
 // UpdateSolution 更新比赛解决方案信息
@@ -85,7 +93,9 @@ func (a *ContestSolutionAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := contestSolutionSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := contestSolutionSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -100,7 +110,9 @@ func (a *ContestSolutionAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := contestSolutionSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := contestSolutionSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -117,7 +129,9 @@ func (a *ContestSolutionAPI) GetContestSolutions(c *gin.Context) {
 		return
 	}
 
-	solutions, err := service.ContestSolutionSvc.GetContestSolutions(id.ContestID)
+	ctx := context.Background()
+
+	solutions, err := service.ContestSolutionSvc.GetContestSolutions(ctx, id.ContestID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -134,8 +148,9 @@ func (a *ContestSolutionAPI) GetContestRanking(c *gin.Context) {
 		ginx.ResError(c, errors.InvalidInput("未找到比赛ID"))
 		return
 	}
+	ctx := context.Background()
 
-	ranking, err := service.ContestSolutionSvc.GetContestRanking(id.ContestID)
+	ranking, err := service.ContestSolutionSvc.GetContestRanking(ctx, id.ContestID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return

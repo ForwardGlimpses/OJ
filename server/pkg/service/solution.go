@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
 	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
@@ -11,21 +10,21 @@ import (
 )
 
 type SolutionServiceInterface interface {
-	Get(id int) (*schema.SolutionItem, error)
-	Query(params schema.SolutionParams) (schema.SolutionItems, int64, error)
-	Create(item *schema.SolutionItem) (int, error)
-	Update(id int, item *schema.SolutionItem) error
-	Delete(id int) error
+	Get(ctx context.Context, id int) (*schema.SolutionItem, error)
+	Query(ctx context.Context, params schema.SolutionParams) (schema.SolutionItems, int64, error)
+	Create(ctx context.Context, item *schema.SolutionItem) (int, error)
+	Update(ctx context.Context, id int, item *schema.SolutionItem) error
+	Delete(ctx context.Context, id int) error
 }
 
 var SolutionSvc SolutionServiceInterface = &SolutionService{}
 
 type SolutionService struct{}
 
-// Query根据条件和分页查询获取用户列表
-func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionItems, int64, error) {
+// Query 根据条件和分页查询获取解题方案列表
+func (a *SolutionService) Query(ctx context.Context, params schema.SolutionParams) (schema.SolutionItems, int64, error) {
 	// 初始化查询
-	query := global.DB.Model(&schema.SolutionDBItem{})
+	query := global.DB.WithContext(ctx).Model(&schema.SolutionDBItem{})
 
 	// 应用过滤条件
 	if params.UserID != "" {
@@ -49,9 +48,8 @@ func (a *SolutionService) Query(params schema.SolutionParams) (schema.SolutionIt
 }
 
 // Get 获取解题方案
-func (a *SolutionService) Get(id int) (*schema.SolutionItem, error) {
-	db := global.DB.WithContext(context.Background())
-	//var item *schema.SolutionDBItem
+func (a *SolutionService) Get(ctx context.Context, id int) (*schema.SolutionItem, error) {
+	db := global.DB.WithContext(ctx)
 	item := &schema.SolutionDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
@@ -62,31 +60,22 @@ func (a *SolutionService) Get(id int) (*schema.SolutionItem, error) {
 }
 
 // Create 创建解题方案
-func (a *SolutionService) Create(item *schema.SolutionItem) (int, error) {
-	db := global.DB.WithContext(context.Background())
-	err := db.Create(item.ToDBItem()).Error
+func (a *SolutionService) Create(ctx context.Context, item *schema.SolutionItem) (int, error) {
+	db := global.DB.WithContext(ctx)
+	dbItem := item.ToDBItem()
+	err := db.Create(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to create solution:", err)
 		return 0, err
 	}
-	// 手动查询填充 ID
-	var createdItem schema.SolutionDBItem
-	err = db.Where("problem_id = ? AND user_id = ? AND status = ?", item.ProblemID, item.UserID, "Pending").First(&createdItem).Error
-	if err != nil {
-		logs.Error("Failed to get created solution:", err)
-		return 0, err
-	}
-
-	// 更新 SolutionItem 的 ID
-	item.ID = createdItem.ID
-	fmt.Println("Solution created with ID:", item.ID)
-	return item.ID, nil
+	return dbItem.ID, nil
 }
 
 // Update 更新解题方案
-func (a *SolutionService) Update(id int, item *schema.SolutionItem) error {
-	db := global.DB.WithContext(context.Background())
-	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+func (a *SolutionService) Update(ctx context.Context, id int, item *schema.SolutionItem) error {
+	db := global.DB.WithContext(ctx)
+	dbItem := item.ToDBItem()
+	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update solution with ID:", id, "Error:", err)
 		return err
@@ -95,8 +84,8 @@ func (a *SolutionService) Update(id int, item *schema.SolutionItem) error {
 }
 
 // Delete 删除解题方案
-func (a *SolutionService) Delete(id int) error {
-	db := global.DB.WithContext(context.Background())
+func (a *SolutionService) Delete(ctx context.Context, id int) error {
+	db := global.DB.WithContext(ctx)
 	err := db.Where("id = ?", id).Delete(&schema.SolutionDBItem{}).Error
 	if err != nil {
 		logs.Error("Failed to delete solution with ID:", id, "Error:", err)

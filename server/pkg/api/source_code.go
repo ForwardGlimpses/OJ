@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -20,7 +22,9 @@ func (a *SourceCodeAPI) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := sourceCodeSvc.Get(id.ID)
+	ctx := context.Background()
+
+	item, err := sourceCodeSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -35,7 +39,9 @@ func (a *SourceCodeAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _, err := sourceCodeSvc.Create(&item); err != nil {
+	ctx := context.Background()
+
+	if _, err := sourceCodeSvc.Create(ctx, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -54,7 +60,9 @@ func (a *SourceCodeAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := sourceCodeSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := sourceCodeSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -68,7 +76,9 @@ func (a *SourceCodeAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := sourceCodeSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := sourceCodeSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

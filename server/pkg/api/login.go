@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/service"
@@ -21,7 +22,9 @@ func (a *LoginAPI) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := service.LoginSvc.Login(req.Email, req.Password)
+	ctx := context.Background()
+
+	token, err := service.LoginSvc.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

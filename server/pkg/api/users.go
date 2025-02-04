@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -20,7 +22,9 @@ func (a *UsersAPI) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := usersSvc.Get(id.ID)
+	ctx := context.Background()
+
+	item, err := usersSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -36,7 +40,9 @@ func (a *UsersAPI) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := usersSvc.Create(item)
+	ctx := context.Background()
+
+	id, err := usersSvc.Create(ctx, item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -53,9 +59,11 @@ func (a *UsersAPI) Register(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+
 	item.Level = 1
 
-	id, err := usersSvc.Create(item)
+	id, err := usersSvc.Create(ctx, item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -76,7 +84,9 @@ func (a *UsersAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := usersSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := usersSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -93,7 +103,9 @@ func (a *UsersAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := usersSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := usersSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

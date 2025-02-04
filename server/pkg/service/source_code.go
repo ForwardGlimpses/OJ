@@ -10,11 +10,11 @@ import (
 )
 
 type SourceCodeServiceInterface interface {
-	Get(id int) (*schema.SourceCodeItem, error)
-	Query(params schema.SourceCodeParams) (schema.SourceCodeItems, int64, error)
-	Create(item *schema.SourceCodeItem) (int, error)
-	Update(id int, item *schema.SourceCodeItem) error
-	Delete(id int) error
+	Get(ctx context.Context, id int) (*schema.SourceCodeItem, error)
+	Query(ctx context.Context, params schema.SourceCodeParams) (schema.SourceCodeItems, int64, error)
+	Create(ctx context.Context, item *schema.SourceCodeItem) (int, error)
+	Update(ctx context.Context, id int, item *schema.SourceCodeItem) error
+	Delete(ctx context.Context, id int) error
 }
 
 var SourceCodeSvc SourceCodeServiceInterface = &SourceCodeService{}
@@ -22,9 +22,9 @@ var SourceCodeSvc SourceCodeServiceInterface = &SourceCodeService{}
 type SourceCodeService struct{}
 
 // Query根据条件和分页查询获取用户列表
-func (a *SourceCodeService) Query(params schema.SourceCodeParams) (schema.SourceCodeItems, int64, error) {
+func (a *SourceCodeService) Query(ctx context.Context, params schema.SourceCodeParams) (schema.SourceCodeItems, int64, error) {
 	// 初始化查询
-	query := global.DB.Model(&schema.SourceCodeDBItem{})
+	query := global.DB.WithContext(ctx).Model(&schema.SourceCodeDBItem{})
 
 	// 应用过滤条件
 	if params.SolutionID != 0 {
@@ -48,8 +48,8 @@ func (a *SourceCodeService) Query(params schema.SourceCodeParams) (schema.Source
 }
 
 // Get 获取源代码
-func (a *SourceCodeService) Get(id int) (*schema.SourceCodeItem, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *SourceCodeService) Get(ctx context.Context, id int) (*schema.SourceCodeItem, error) {
+	db := global.DB.WithContext(ctx)
 	item := &schema.SourceCodeDBItem{}
 	err := db.Where("solution_id = ?", id).First(item).Error
 	if err != nil {
@@ -60,8 +60,8 @@ func (a *SourceCodeService) Get(id int) (*schema.SourceCodeItem, error) {
 }
 
 // Create 创建源代码
-func (a *SourceCodeService) Create(item *schema.SourceCodeItem) (int, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *SourceCodeService) Create(ctx context.Context, item *schema.SourceCodeItem) (int, error) {
+	db := global.DB.WithContext(ctx)
 	err := db.Create(item.ToDBItem()).Error
 	if err != nil {
 		logs.Error("Failed to create source code:", err)
@@ -71,9 +71,10 @@ func (a *SourceCodeService) Create(item *schema.SourceCodeItem) (int, error) {
 }
 
 // Update 更新源代码
-func (a *SourceCodeService) Update(id int, item *schema.SourceCodeItem) error {
-	db := global.DB.WithContext(context.Background())
-	err := db.Where("solution_id = ?", id).Updates(item.ToDBItem()).Error
+func (a *SourceCodeService) Update(ctx context.Context, id int, item *schema.SourceCodeItem) error {
+	db := global.DB.WithContext(ctx)
+	dbItem := item.ToDBItem()
+	err := db.Where("solution_id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update source code with ID:", id, "Error:", err)
 		return err
@@ -82,8 +83,8 @@ func (a *SourceCodeService) Update(id int, item *schema.SourceCodeItem) error {
 }
 
 // Delete 删除源代码
-func (a *SourceCodeService) Delete(id int) error {
-	db := global.DB.WithContext(context.Background())
+func (a *SourceCodeService) Delete(ctx context.Context, id int) error {
+	db := global.DB.WithContext(ctx)
 	err := db.Where("solution_id = ?", id).Delete(&schema.SourceCodeItem{}).Error
 	if err != nil {
 		logs.Error("Failed to delete source code with ID:", id, "Error:", err)

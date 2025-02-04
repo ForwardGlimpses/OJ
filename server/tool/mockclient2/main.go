@@ -75,7 +75,7 @@ func main() {
 		Title:        "New Problem",
 		Description:  "This is a new problem",
 		Input:        "1 1",
-		Output:       "2/n",
+		Output:       "2\n",
 		Indate:       time.Now(),
 		SampleInput:  "Sample input",
 		SampleOutput: "Sample output",
@@ -378,12 +378,10 @@ func marshalToReader(v interface{}) (io.Reader, error) {
 }
 
 func submitSolution(baseURL, token string, contestID, problemID, userID int, inputCode string) int {
-	data := map[string]interface{}{
-		"contest_id": contestID,
-		"id":         problemID,
-		"user_id":    userID,
-		"inputcode":  inputCode,
-		"indate":     time.Now(),
+	data := schema.Submit{
+		ID:        problemID,
+		UserID:    userID,
+		InputCode: inputCode,
 	}
 	reader, err := marshalToReader(data)
 	if err != nil {
@@ -391,8 +389,9 @@ func submitSolution(baseURL, token string, contestID, problemID, userID int, inp
 		return 0
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/contestSolution/%d", baseURL, problemID), reader)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/contestSolution/%d", baseURL, contestID), reader)
 	req.AddCookie(&http.Cookie{Name: "token", Value: token})
+
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return 0
@@ -434,7 +433,9 @@ func getContestRanking(baseURL, token string, contestID int) {
 		fmt.Println("Error creating request:", err)
 		return
 	}
+
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

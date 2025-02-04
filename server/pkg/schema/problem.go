@@ -23,7 +23,7 @@ type ProblemItem struct {
 }
 
 type ProblemDBItem struct {
-	ID           int 
+	ID           int
 	Title        string
 	Description  string
 	Input        string

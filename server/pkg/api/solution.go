@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -19,7 +21,9 @@ func (s *SolutionAPI) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := solutionSvc.Get(id.ID)
+	ctx := context.Background()
+
+	item, err := solutionSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -35,11 +39,14 @@ func (s *SolutionAPI) Create(c *gin.Context) {
 		return
 	}
 
-	if _, err := solutionSvc.Create(&item); err != nil {
+	ctx := context.Background()
+
+	id, err := solutionSvc.Create(ctx, &item)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, id)
 }
 
 // Update 更新解决方案
@@ -55,7 +62,9 @@ func (s *SolutionAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := solutionSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := solutionSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -70,7 +79,9 @@ func (s *SolutionAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := solutionSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := solutionSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

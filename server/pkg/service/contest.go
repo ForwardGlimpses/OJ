@@ -11,11 +11,11 @@ import (
 )
 
 type ContestServiceInterface interface {
-	Query(params schema.ContestParams) (schema.ContestItems, int64, error)
-	Get(id int) (*schema.ContestItem, error)
-	Create(item *schema.ContestItem) (int, error)
-	Update(id int, item *schema.ContestItem) error
-	Delete(id int) error
+	Query(ctx context.Context, params schema.ContestParams) (schema.ContestItems, int64, error)
+	Get(ctx context.Context, id int) (*schema.ContestItem, error)
+	Create(ctx context.Context, item *schema.ContestItem) (int, error)
+	Update(ctx context.Context, id int, item *schema.ContestItem) error
+	Delete(ctx context.Context, id int) error
 }
 
 var ContestSvc ContestServiceInterface = &ContestService{}
@@ -23,9 +23,9 @@ var ContestSvc ContestServiceInterface = &ContestService{}
 type ContestService struct{}
 
 // Query根据条件和分页查询获取用户列表
-func (a *ContestService) Query(params schema.ContestParams) (schema.ContestItems, int64, error) {
+func (a *ContestService) Query(ctx context.Context, params schema.ContestParams) (schema.ContestItems, int64, error) {
 	// 初始化查询
-	query := global.DB.Model(&schema.ContestDBItem{})
+	query := global.DB.WithContext(ctx).Model(&schema.ContestDBItem{})
 
 	// 应用过滤条件
 	if params.Title != "" {
@@ -49,8 +49,8 @@ func (a *ContestService) Query(params schema.ContestParams) (schema.ContestItems
 }
 
 // Get 获取比赛信息
-func (a *ContestService) Get(id int) (*schema.ContestItem, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *ContestService) Get(ctx context.Context, id int) (*schema.ContestItem, error) {
+	db := global.DB.WithContext(ctx)
 	//var item *schema.ContestDBItem
 	item := &schema.ContestDBItem{}
 	fmt.Println("idddd ", id)
@@ -63,8 +63,8 @@ func (a *ContestService) Get(id int) (*schema.ContestItem, error) {
 }
 
 // Create 创建比赛
-func (a *ContestService) Create(item *schema.ContestItem) (int, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *ContestService) Create(ctx context.Context, item *schema.ContestItem) (int, error) {
+	db := global.DB.WithContext(ctx)
 	dbItem := item.ToDBItem()
 	err := db.Create(dbItem).Error
 	if err != nil {
@@ -75,8 +75,8 @@ func (a *ContestService) Create(item *schema.ContestItem) (int, error) {
 }
 
 // Update 更新比赛
-func (a *ContestService) Update(id int, item *schema.ContestItem) error {
-	db := global.DB.WithContext(context.Background())
+func (a *ContestService) Update(ctx context.Context, id int, item *schema.ContestItem) error {
+	db := global.DB.WithContext(ctx)
 	dbItem := item.ToDBItem()
 	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
@@ -87,8 +87,8 @@ func (a *ContestService) Update(id int, item *schema.ContestItem) error {
 }
 
 // Delete 删除比赛
-func (a *ContestService) Delete(id int) error {
-	db := global.DB.WithContext(context.Background())
+func (a *ContestService) Delete(ctx context.Context, id int) error {
+	db := global.DB.WithContext(ctx)
 	err := db.Where("id = ?", id).Delete(&schema.ContestDBItem{}).Error
 	if err != nil {
 		logs.Error("Failed to delete contest with ID:", id, "Error:", err)

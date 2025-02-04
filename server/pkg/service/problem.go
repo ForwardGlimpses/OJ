@@ -1,7 +1,7 @@
 package service
 
 import (
-	"context" // 导入 json 包
+	"context"
 	"fmt"
 	"time"
 
@@ -10,31 +10,29 @@ import (
 	"github.com/ForwardGlimpses/OJ/server/pkg/judge"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
-	//"github.com/google/uuid"
 )
 
 type ProblemServiceInterface interface {
-	Query(params schema.ProblemParams) (schema.ProblemItems, int64, error)
-	Get(id int) (*schema.ProblemItem, error)
-	Create(item *schema.ProblemItem) (int, error)
-	Update(id int, item *schema.ProblemItem) error
-	Delete(id int) error
-	//TODO 提交 判断 存储提交结果 返回提交结果id给前端 前端拿提交的id来查询status
-	Submit(id int, userId int, inputCode string) (int, error)
+	Query(ctx context.Context, params schema.ProblemParams) (schema.ProblemItems, int64, error)
+	Get(ctx context.Context, id int) (*schema.ProblemItem, error)
+	Create(ctx context.Context, item *schema.ProblemItem) (int, error)
+	Update(ctx context.Context, id int, item *schema.ProblemItem) error
+	Delete(ctx context.Context, id int) error
+	Submit(ctx context.Context, id int, userId int, inputCode string) (int, error)
 }
 
 var ProblemSvc ProblemServiceInterface = &ProblemService{}
 
 type ProblemService struct{}
 
-// Query根据条件和分页查询获取用户列表
-func (a *ProblemService) Query(params schema.ProblemParams) (schema.ProblemItems, int64, error) {
+// Query 根据条件和分页查询获取题目列表
+func (a *ProblemService) Query(ctx context.Context, params schema.ProblemParams) (schema.ProblemItems, int64, error) {
 	// 初始化查询
-	query := global.DB.Model(&schema.ProblemDBItem{})
+	query := global.DB.WithContext(ctx).Model(&schema.ProblemDBItem{})
 
 	// 应用过滤条件
 	if params.ProblemID != 0 {
-		query = query.Where("Problem_id = ?", params.ProblemID)
+		query = query.Where("problem_id = ?", params.ProblemID)
 	}
 
 	// 使用通用分页函数并指定返回类型
@@ -54,8 +52,8 @@ func (a *ProblemService) Query(params schema.ProblemParams) (schema.ProblemItems
 }
 
 // Get 通过ID从数据库获取题目
-func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *ProblemService) Get(ctx context.Context, id int) (*schema.ProblemItem, error) {
+	db := global.DB.WithContext(ctx)
 	item := &schema.ProblemDBItem{}
 	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
@@ -67,8 +65,8 @@ func (a *ProblemService) Get(id int) (*schema.ProblemItem, error) {
 }
 
 // Create 将 ProblemItem 转换为 ProblemDBItem 并存入数据库
-func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
-	db := global.DB.WithContext(context.Background())
+func (a *ProblemService) Create(ctx context.Context, item *schema.ProblemItem) (int, error) {
+	db := global.DB.WithContext(ctx)
 	dbItem := item.ToDBItem()
 	err := db.Create(dbItem).Error
 	if err != nil {
@@ -79,9 +77,10 @@ func (a *ProblemService) Create(item *schema.ProblemItem) (int, error) {
 }
 
 // Update 更新题目信息
-func (a *ProblemService) Update(id int, item *schema.ProblemItem) error {
-	db := global.DB.WithContext(context.Background())
-	err := db.Where("id = ?", id).Updates(item.ToDBItem()).Error
+func (a *ProblemService) Update(ctx context.Context, id int, item *schema.ProblemItem) error {
+	db := global.DB.WithContext(ctx)
+	dbItem := item.ToDBItem()
+	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update problem with ID:", id, "Error:", err)
 		return err
@@ -90,25 +89,20 @@ func (a *ProblemService) Update(id int, item *schema.ProblemItem) error {
 }
 
 // Delete 根据ID删除题目
-func (a *ProblemService) Delete(id int) error {
-	db := global.DB.WithContext(context.Background())
-	err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{})
-	if err.Error != nil {
-		logs.Error("Failed to delete problem with ID:", id, "Error:", err.Error)
-		return err.Error
-	}
-	if err.RowsAffected == 0 {
-		return fmt.Errorf("no record found with id %d", id)
+func (a *ProblemService) Delete(ctx context.Context, id int) error {
+	db := global.DB.WithContext(ctx)
+	err := db.Where("id = ?", id).Delete(&schema.ProblemDBItem{}).Error
+	if err != nil {
+		logs.Error("Failed to delete problem with ID:", id, "Error:", err)
+		return err
 	}
 	return nil
 }
 
-func (a *ProblemService) Submit(id int, userId int, code string) (int, error) {
-
-	//db := global.DB.WithContext(context.Background())
-
+// Submit 提交解决方案
+func (a *ProblemService) Submit(ctx context.Context, id int, userId int, code string) (int, error) {
 	// Step 1: 获取题目详细信息
-	problem, err := a.Get(id)
+	problem, err := a.Get(ctx, id)
 	if err != nil {
 		logs.Error("Failed to get problem with ID:", id, "Error:", err)
 		return 0, err
@@ -120,7 +114,7 @@ func (a *ProblemService) Submit(id int, userId int, code string) (int, error) {
 		Status:    "Pending",
 	}
 
-	submissionId, err := SolutionSvc.Create(submission)
+	submissionId, err := SolutionSvc.Create(ctx, submission)
 	if err != nil {
 		logs.Error("Failed to create submission:", err)
 		return 0, err
@@ -147,14 +141,15 @@ func (a *ProblemService) Submit(id int, userId int, code string) (int, error) {
 		Memory:    resp.Memory,
 		Indate:    time.Now(),
 		Language:  "C",
-		Passrate:  resp.RunTime, // 这里为什么使用 RunTime ？
+		Passrate:  resp.RunTime,
 	}
-	//改成solution的creat创建
-	err = SolutionSvc.Update(submissionId, submission)
+	err = SolutionSvc.Update(ctx, submissionId, submission)
 	if err != nil {
 		logs.Error("Failed to update submission:", err)
 		return 0, err
 	}
+
+	fmt.Println("Submission created with ID:", submissionId)
 
 	// Step 7: 返回提交记录的 ID
 	return submissionId, nil

@@ -1,0 +1,35 @@
+# 使用官方的 Go 语言镜像作为基础镜像
+FROM golang:1.20 AS builder
+
+# 设置工作目录
+WORKDIR /app
+
+# 将 go.mod 和 go.sum 复制到工作目录
+COPY go.mod go.sum ./
+
+# 下载依赖
+RUN go mod download
+
+# 将项目的所有文件复制到工作目录
+COPY . .
+
+# 构建 Go 应用程序
+RUN go build -o main ./cmd/main.go
+
+# 使用一个更小的基础镜像来运行应用程序
+FROM debian:bullseye-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 从构建阶段复制构建好的二进制文件
+COPY --from=builder /app/main .
+
+# 将配置文件复制到工作目录
+COPY --from=builder /app/configs/configs.json ./configs/configs.json
+
+# 暴露应用程序运行的端口
+EXPOSE 8080
+
+# 运行应用程序
+CMD ["./main", "start", "-c", "./configs/configs.json"]

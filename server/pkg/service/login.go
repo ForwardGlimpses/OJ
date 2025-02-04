@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -15,9 +16,9 @@ import (
 var jwtSecret = []byte("your-secure-secret-key") // JWT 密钥，可以存储在配置文件中
 
 type LoginServiceInterface interface {
-	Login(email, password string) (token string, err error)
-	Logout(token string) (err error)
-	GetUserInfo(token string) (userId int, userLevel int, err error)
+	Login(ctx context.Context, email, password string) (token string, err error)
+	Logout(ctx context.Context, token string) (err error)
+	GetUserInfo(ctx context.Context, token string) (userId int, userLevel int, err error)
 }
 
 var LoginSvc LoginServiceInterface = &LoginService{}
@@ -67,7 +68,7 @@ func validateJWT(tokenString string) (int, error) {
 }
 
 // 用户登录，生成 JWT Token
-func (a *LoginService) Login(email, password string) (string, error) {
+func (a *LoginService) Login(ctx context.Context, email, password string) (string, error) {
 
 	var user *schema.UsersItem
 	var err error
@@ -81,7 +82,7 @@ func (a *LoginService) Login(email, password string) (string, error) {
 		}
 	} else {
 		logs.Info("User login")
-		user, err = UserSvc.GetWithEmail(email) // 获取用户信息
+		user, err = UserSvc.GetWithEmail(ctx, email) // 获取用户信息
 		if err != nil {
 			return "", err
 		}
@@ -108,7 +109,7 @@ func (a *LoginService) Login(email, password string) (string, error) {
 }
 
 // 用户登出，删除 Token 信息
-func (a *LoginService) Logout(token string) error {
+func (a *LoginService) Logout(ctx context.Context, token string) error {
 	_, ok := a.tokenMap.LoadAndDelete(token)
 	if !ok {
 		return errors.InvalidInput("login expired or invalid token")
@@ -117,7 +118,7 @@ func (a *LoginService) Logout(token string) error {
 }
 
 // 获取用户 ID，验证 Token 是否有效
-func (a *LoginService) GetUserInfo(token string) (int, int, error) {
+func (a *LoginService) GetUserInfo(ctx context.Context, token string) (int, int, error) {
 	// 验证 JWT Token 是否有效并提取用户 ID
 	_, err := validateJWT(token)
 	if err != nil {

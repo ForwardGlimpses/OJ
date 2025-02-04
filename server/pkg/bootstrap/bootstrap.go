@@ -4,17 +4,22 @@ import (
 	"net/http"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/judge"
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/route"
 	"github.com/gin-gonic/gin"
 )
 
 func Run() error {
+
+	logs.Init()  //初始化日志配置
+	judge.Init() //初始化评测服务
+
 	err := global.Init()
 	if err != nil {
 		return err
 	}
 	g := gin.New()
-
 	// 配置 CORS
 	// g.Use(cors.New(cors.Config{
 	// 	AllowOrigins:     []string{"http://localhost:8080"},

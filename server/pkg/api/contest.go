@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -18,7 +20,9 @@ func (a *ContestAPI) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := contestSvc.Get(id.ID)
+	ctx := context.Background()
+
+	item, err := contestSvc.Get(ctx, id.ID)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -33,7 +37,9 @@ func (a *ContestAPI) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := contestSvc.Create(&item)
+	ctx := context.Background()
+
+	id, err := contestSvc.Create(ctx, &item)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
@@ -53,7 +59,9 @@ func (a *ContestAPI) Update(c *gin.Context) {
 		return
 	}
 
-	if err := contestSvc.Update(id.ID, &item); err != nil {
+	ctx := context.Background()
+
+	if err := contestSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
@@ -67,7 +75,9 @@ func (a *ContestAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := contestSvc.Delete(id.ID); err != nil {
+	ctx := context.Background()
+
+	if err := contestSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}

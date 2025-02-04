@@ -23,8 +23,8 @@ func RegisterContestSolution(g *gin.RouterGroup) {
 	api := api.ContestSolutionAPI{}
 	gGroup.GET(":id/rank", middleware.Authentication(1), api.GetContestRanking)
 	gGroup.GET(":id", middleware.Authentication(1), api.GetContestSolutions)
-	gGroup.POST("", middleware.Authentication(2), api.Create)
 	gGroup.POST(":id", middleware.Authentication(1), api.Submit)
+	gGroup.POST("", middleware.Authentication(2), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
 	gGroup.DELETE(":id", middleware.Authentication(2), api.Delete)
 }

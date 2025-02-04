@@ -28,7 +28,7 @@ func Load(path string) error {
 	return nil
 }
 
-//启动 go run "C:\Users\乔书祥\Desktop\OJ\server\cmd\main.go" start -c C:\Users\乔书祥\Desktop\OJ\server\configs\configs.json
+//启动 go run ".\cmd\main.go" start -c .\configs\configs.json
 
 var C Config
 
@@ -65,4 +65,3 @@ func (a Mysql) DSN() string {
 func (j JudgeConfig) BaseURL() string {
 	return fmt.Sprintf("http://%s:%d/run", j.Host, j.Port)
 }
-
