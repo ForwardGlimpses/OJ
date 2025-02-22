@@ -1,7 +1,7 @@
 package api
 
 import (
-	"context"
+	"fmt"
 	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
@@ -28,7 +28,7 @@ func (a *ContestSolutionAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	submission := &schema.ContestSolutionItem{
 		ContestID:   req.ContestID,
@@ -65,7 +65,7 @@ func (a *ContestSolutionAPI) Submit(c *gin.Context) {
 	// 日志记录提交请求
 	logs.Infof("用户 %d 提交了题目 %d 的代码", input.UserID, input.ID)
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	// 调用 ProblemService 中的 Submit 方法，处理代码提交
 	submissionID, err := service.ContestSolutionSvc.Submit(ctx, id.ID, &input)
@@ -93,7 +93,7 @@ func (a *ContestSolutionAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := contestSolutionSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
@@ -110,7 +110,7 @@ func (a *ContestSolutionAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := contestSolutionSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
@@ -120,37 +120,45 @@ func (a *ContestSolutionAPI) Delete(c *gin.Context) {
 }
 
 // GetContestSolutions 获取比赛的所有解决方案
-func (a *ContestSolutionAPI) GetContestSolutions(c *gin.Context) {
-	var id struct {
-		ContestID int `uri:"contest_id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&id); err != nil {
-		ginx.ResError(c, errors.InvalidInput("未找到比赛ID"))
+func (a *ContestSolutionAPI) Query(c *gin.Context) {
+	var params schema.ContestSolutionParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
 		return
 	}
+	ctx := c.Request.Context()
 
-	ctx := context.Background()
-
-	solutions, err := service.ContestSolutionSvc.GetContestSolutions(ctx, id.ContestID)
+	items, total, err := contestSolutionSvc.Query(ctx, params)
 	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, solutions)
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.ContestSolutionItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
 }
 
 // GetContestRanking 获取比赛的实时排名
 func (a *ContestSolutionAPI) GetContestRanking(c *gin.Context) {
-	var id struct {
-		ContestID int `uri:"contest_id" binding:"required"`
-	}
+	var id schema.ID
 	if err := c.ShouldBindUri(&id); err != nil {
+		fmt.Println("contestsolution err: ", err)
 		ginx.ResError(c, errors.InvalidInput("未找到比赛ID"))
 		return
 	}
-	ctx := context.Background()
+	var params schema.ContestSolutionParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
 
-	ranking, err := service.ContestSolutionSvc.GetContestRanking(ctx, id.ContestID)
+	ctx := c.Request.Context()
+
+	ranking, err := service.ContestSolutionSvc.GetContestRanking(ctx, id.ID, params)
 	if err != nil {
 		ginx.ResError(c, err)
 		return

@@ -30,7 +30,7 @@ func TestGetContestRanking(t *testing.T) {
 
 	for _, tt := range tests {
 		mockresult = tt.input
-		res, _ := ContestSolutionSvc.GetContestSolutions(context.Background(), 0)
+		res, _, _ := ContestSolutionSvc.Query(context.Background(), schema.ContestSolutionParams{})
 		gomega.Expect(tt.output, gomega.Equal(res))
 	}
 }

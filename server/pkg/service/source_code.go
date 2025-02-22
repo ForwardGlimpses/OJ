@@ -51,7 +51,7 @@ func (a *SourceCodeService) Query(ctx context.Context, params schema.SourceCodeP
 func (a *SourceCodeService) Get(ctx context.Context, id int) (*schema.SourceCodeItem, error) {
 	db := global.DB.WithContext(ctx)
 	item := &schema.SourceCodeDBItem{}
-	err := db.Where("solution_id = ?", id).First(item).Error
+	err := db.Where("id = ?", id).First(item).Error
 	if err != nil {
 		logs.Error("Failed to get source code with ID:", id, "Error:", err)
 		return nil, err
@@ -62,19 +62,20 @@ func (a *SourceCodeService) Get(ctx context.Context, id int) (*schema.SourceCode
 // Create 创建源代码
 func (a *SourceCodeService) Create(ctx context.Context, item *schema.SourceCodeItem) (int, error) {
 	db := global.DB.WithContext(ctx)
-	err := db.Create(item.ToDBItem()).Error
+	dbItem := item.ToDBItem()
+	err := db.Create(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to create source code:", err)
 		return 0, err
 	}
-	return item.ID, nil
+	return dbItem.ID, nil
 }
 
 // Update 更新源代码
 func (a *SourceCodeService) Update(ctx context.Context, id int, item *schema.SourceCodeItem) error {
 	db := global.DB.WithContext(ctx)
 	dbItem := item.ToDBItem()
-	err := db.Where("solution_id = ?", id).Updates(dbItem).Error
+	err := db.Where("id = ?", id).Updates(dbItem).Error
 	if err != nil {
 		logs.Error("Failed to update source code with ID:", id, "Error:", err)
 		return err
@@ -85,7 +86,7 @@ func (a *SourceCodeService) Update(ctx context.Context, id int, item *schema.Sou
 // Delete 删除源代码
 func (a *SourceCodeService) Delete(ctx context.Context, id int) error {
 	db := global.DB.WithContext(ctx)
-	err := db.Where("solution_id = ?", id).Delete(&schema.SourceCodeItem{}).Error
+	err := db.Where("id = ?", id).Delete(&schema.SourceCodeDBItem{}).Error
 	if err != nil {
 		logs.Error("Failed to delete source code with ID:", id, "Error:", err)
 		return err

@@ -50,6 +50,7 @@ type Mysql struct {
 type JudgeConfig struct {
 	Host string
 	Port int
+	UseHTTP bool
 }
 
 type Root struct {

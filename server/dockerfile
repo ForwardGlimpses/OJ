@@ -16,8 +16,8 @@ COPY . .
 # 构建 Go 应用程序
 RUN go build -o main ./cmd/main.go
 
-# 使用一个更小的基础镜像来运行应用程序
-FROM debian:bullseye-slim
+# 使用一个包含所需 glibc 版本的基础镜像来运行应用程序
+FROM debian:bookworm-slim
 
 # 设置工作目录
 WORKDIR /app

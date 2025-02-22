@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -13,6 +11,29 @@ import (
 
 type ContestAPI struct{}
 
+func (a *ContestAPI) Query(c *gin.Context) {
+	var params schema.ContestParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	items, total, err := contestSvc.Query(ctx, params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.ContestItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
+
 func (a *ContestAPI) Get(c *gin.Context) {
 	var id schema.ID
 	if err := c.ShouldBindUri(&id); err != nil {
@@ -20,7 +41,7 @@ func (a *ContestAPI) Get(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item, err := contestSvc.Get(ctx, id.ID)
 	if err != nil {
@@ -37,7 +58,7 @@ func (a *ContestAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	id, err := contestSvc.Create(ctx, &item)
 	if err != nil {
@@ -59,7 +80,7 @@ func (a *ContestAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := contestSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
@@ -75,7 +96,7 @@ func (a *ContestAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := contestSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)

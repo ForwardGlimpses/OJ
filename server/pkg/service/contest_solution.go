@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/global"
+	"github.com/ForwardGlimpses/OJ/server/pkg/gormx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/judge"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -16,8 +17,8 @@ type ContestSolutionServiceInterface interface {
 	Get(ctx context.Context, id int) (*schema.ContestSolutionItem, error)
 	Update(ctx context.Context, id int, item *schema.ContestSolutionItem) error
 	Delete(ctx context.Context, id int) error
-	GetContestSolutions(ctx context.Context, contestID int) (schema.ContestSolutionItems, error)
-	GetContestRanking(ctx context.Context, contestID int) ([]ContestRankingItem, error)
+	Query(ctx context.Context, params schema.ContestSolutionParams) (schema.ContestSolutionItems, int64, error)
+	GetContestRanking(ctx context.Context, contestID int, params schema.ContestSolutionParams) ([]ContestRankingItem, error)
 	Submit(ctx context.Context, contestID int, input *schema.Submit) (int, error)
 }
 
@@ -89,21 +90,37 @@ func (a *ContestSolutionService) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-// GetContestSolutions 获取比赛的所有解决方案
-func (a *ContestSolutionService) GetContestSolutions(ctx context.Context, contestID int) (schema.ContestSolutionItems, error) {
-	var solutions schema.ContestSolutionDBItems
-	err := global.DB.WithContext(ctx).Where("contest_id = ?", contestID).Order("submit_time DESC").Find(&solutions).Error
-	if err != nil {
-		logs.Error("Failed to get contest solutions:", err)
-		return nil, err
+// Query 根据条件和分页查询获取比赛解决方案列表
+func (a *ContestSolutionService) Query(ctx context.Context, params schema.ContestSolutionParams) (schema.ContestSolutionItems, int64, error) {
+
+	//初始化查询
+	query := global.DB.WithContext(ctx).Model(&schema.ContestSolutionDBItem{})
+
+	//应用过滤条件
+	if params.Title != "" {
+		query = query.Where("title = ?", params.Title)
 	}
-	return solutions.ToItems(), nil
+
+	// 使用通用分页函数并指定返回类型
+	contestsolution, total, err := gormx.GetPaginatedData[schema.ContestSolutionDBItem](query, params.P, "id ASC")
+	if err != nil {
+		logs.Error("Failed to query contest problems:", err)
+		return nil, 0, err
+	}
+
+	// 转换结果为返回的模型类型
+	var items schema.ContestSolutionItems
+	for _, contestsolution := range contestsolution {
+		items = append(items, contestsolution.ToItem())
+	}
+
+	return items, total, nil
 }
 
 // GetContestRanking 获取比赛的实时排名
-func (a *ContestSolutionService) GetContestRanking(ctx context.Context, contestID int) ([]ContestRankingItem, error) {
+func (a *ContestSolutionService) GetContestRanking(ctx context.Context, contestID int, params schema.ContestSolutionParams) ([]ContestRankingItem, error) {
 	// Step 1: 获取比赛的所有解决方案
-	solutions, err := a.GetContestSolutions(ctx, contestID)
+	solutions, _, err := a.Query(ctx, params)
 	if err != nil {
 		return nil, err
 	}

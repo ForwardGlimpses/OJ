@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -13,6 +11,29 @@ type SolutionAPI struct{}
 
 //var solutionSvc service.SolutionServiceInterface = &service.SolutionService{}
 
+func (a *SolutionAPI) Query(c *gin.Context) {
+	var params schema.SolutionParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	items, total, err := solutionSvc.Query(ctx, params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.SolutionItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
+
 // Get 获取解决方案信息
 func (s *SolutionAPI) Get(c *gin.Context) {
 	var id schema.ID
@@ -21,7 +42,7 @@ func (s *SolutionAPI) Get(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item, err := solutionSvc.Get(ctx, id.ID)
 	if err != nil {
@@ -39,7 +60,7 @@ func (s *SolutionAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	id, err := solutionSvc.Create(ctx, &item)
 	if err != nil {
@@ -62,13 +83,13 @@ func (s *SolutionAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := solutionSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 // Delete 删除解决方案
@@ -79,11 +100,11 @@ func (s *SolutionAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := solutionSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "删除成功")
+	ginx.ResOK(c)
 }

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"time"
 
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
@@ -28,9 +27,7 @@ func Authentication(requiredLevel int) gin.HandlerFunc {
 			return
 		}
 
-		// 创建一个带有超时的上下文
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-		defer cancel()
+		ctx := c.Request.Context()
 
 		// 根据 token 获取用户 ID
 		userId, userLevel, err := loginSvc.GetUserInfo(ctx, token)

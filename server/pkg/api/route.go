@@ -1,7 +1,6 @@
-package route
+package api
 
 import (
-	"github.com/ForwardGlimpses/OJ/server/pkg/api"
 	"github.com/ForwardGlimpses/OJ/server/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
@@ -10,8 +9,9 @@ import (
 
 func RegisterProblem(g *gin.RouterGroup) {
 	gGroup := g.Group("problem")
-	api := api.ProblemAPI{}
+	api := ProblemAPI{}
 	gGroup.GET(":id", api.Get)
+	gGroup.GET("", api.Query)
 	gGroup.POST(":id", middleware.Authentication(1), api.Submit)
 	gGroup.POST("", middleware.Authentication(2), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
@@ -20,9 +20,9 @@ func RegisterProblem(g *gin.RouterGroup) {
 
 func RegisterContestSolution(g *gin.RouterGroup) {
 	gGroup := g.Group("contestSolution")
-	api := api.ContestSolutionAPI{}
+	api := ContestSolutionAPI{}
 	gGroup.GET(":id/rank", middleware.Authentication(1), api.GetContestRanking)
-	gGroup.GET(":id", middleware.Authentication(1), api.Query)
+	gGroup.GET("", api.Query)
 	gGroup.POST(":id", middleware.Authentication(1), api.Submit)
 	gGroup.POST("", middleware.Authentication(2), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
@@ -31,7 +31,7 @@ func RegisterContestSolution(g *gin.RouterGroup) {
 
 func RegisterContestProblem(g *gin.RouterGroup) {
 	gGroup := g.Group("contestProblem")
-	api := api.ContestProblemAPI{}
+	api := ContestProblemAPI{}
 	gGroup.GET("", api.Query)
 	gGroup.GET(":id", api.Get)
 	gGroup.POST("", middleware.Authentication(2), api.Create)
@@ -41,8 +41,9 @@ func RegisterContestProblem(g *gin.RouterGroup) {
 
 func RegisterContest(g *gin.RouterGroup) {
 	gGroup := g.Group("contest")
-	api := api.ContestAPI{}
+	api := ContestAPI{}
 	gGroup.GET(":id", api.Get)
+	gGroup.GET("", api.Query)
 	gGroup.POST("", middleware.Authentication(1), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
 	gGroup.DELETE(":id", middleware.Authentication(2), api.Delete)
@@ -50,8 +51,9 @@ func RegisterContest(g *gin.RouterGroup) {
 
 func RegisterSolution(g *gin.RouterGroup) {
 	gGroup := g.Group("solution")
-	api := api.SolutionAPI{}
+	api := SolutionAPI{}
 	gGroup.GET(":id", api.Get)
+	gGroup.GET("", api.Query)
 	gGroup.POST("", middleware.Authentication(2), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
 	gGroup.DELETE(":id", middleware.Authentication(2), api.Delete)
@@ -59,8 +61,9 @@ func RegisterSolution(g *gin.RouterGroup) {
 
 func RegisterSourceCode(g *gin.RouterGroup) {
 	gGroup := g.Group("sourceCode")
-	api := api.SourceCodeAPI{}
+	api := SourceCodeAPI{}
 	gGroup.GET(":id", api.Get)
+	gGroup.GET("", api.Query)
 	gGroup.POST("", middleware.Authentication(1), api.Create)
 	gGroup.PUT(":id", middleware.Authentication(2), api.Update)
 	gGroup.DELETE(":id", middleware.Authentication(2), api.Delete)
@@ -68,7 +71,7 @@ func RegisterSourceCode(g *gin.RouterGroup) {
 
 func RegisterUsers(g *gin.RouterGroup) {
 	gGroup := g.Group("users")
-	api := api.UsersAPI{}
+	api := UsersAPI{}
 	gGroup.GET(":id", api.Get)
 	gGroup.POST("register", api.Register)
 	gGroup.POST("", api.Create)
@@ -79,6 +82,6 @@ func RegisterUsers(g *gin.RouterGroup) {
 // RegisterLogin 注册认证相关路由
 func RegisterLogin(g *gin.RouterGroup) {
 	gGroup := g.Group("login")
-	api := api.LoginAPI{}
+	api := LoginAPI{}
 	gGroup.POST("", api.Login)
 }

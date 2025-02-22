@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
@@ -13,6 +11,29 @@ import (
 
 type ProblemAPI struct{}
 
+func (a *ProblemAPI) Query(c *gin.Context) {
+	var params schema.ProblemParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	items, total, err := problemSvc.Query(ctx, params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.ProblemItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
+
 // Get 获取题目信息
 func (a *ProblemAPI) Get(c *gin.Context) {
 	var id schema.ID
@@ -21,7 +42,7 @@ func (a *ProblemAPI) Get(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item, err := problemSvc.Get(ctx, id.ID)
 	if err != nil {
@@ -39,7 +60,7 @@ func (a *ProblemAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	id, err := problemSvc.Create(ctx, &item)
 	if err != nil {
@@ -62,7 +83,7 @@ func (a *ProblemAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := problemSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
@@ -79,7 +100,7 @@ func (a *ProblemAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := problemSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
@@ -107,7 +128,7 @@ func (a *ProblemAPI) Submit(c *gin.Context) {
 	// cctx := context.WithValue(ctx, "userID", input.UserID)
 	// ccctx := cctx.Value("problemID")
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	submissionID, err := service.ProblemSvc.Submit(ctx, input.ID, input.UserID, input.InputCode)
 	if err != nil {

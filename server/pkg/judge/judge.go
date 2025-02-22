@@ -1,9 +1,12 @@
 package judge
 
+import "github.com/ForwardGlimpses/OJ/server/pkg/config"
+
 func Init() {
 	// 初始化的时候从 config 中读取地址相关信息传进去
-	judge = newHTTPClient()
-	// TODO: 支持 grpc 客户端
+	if config.C.Judge.UseHTTP {
+		judge = newHTTPClient()
+	}
 }
 
 type judgeInterface interface {

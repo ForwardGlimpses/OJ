@@ -73,3 +73,8 @@ func (a ContestSolutionDBItems) ToItems() ContestSolutionItems {
 	}
 	return ret
 }
+
+type ContestSolutionParams struct {
+	Title string
+	P
+}

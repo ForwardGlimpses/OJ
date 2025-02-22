@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
+	"github.com/ForwardGlimpses/OJ/server/pkg/logs"
 	"github.com/ForwardGlimpses/OJ/server/pkg/service"
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +21,8 @@ func (a *LoginAPI) Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logs.Info("error: ", err)
+		fmt.Println("error: ", err)
 		return
 	}
 
@@ -27,8 +31,11 @@ func (a *LoginAPI) Login(c *gin.Context) {
 	token, err := service.LoginSvc.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		logs.Info("error: ", err)
+		fmt.Println("error: ", err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
+	fmt.Println("token: ", token)
 }

@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -15,6 +13,29 @@ type SourceCodeAPI struct{}
 
 //var sourceCodeSvc service.SourceCodeServiceInterface = &service.SourceCodeService{}
 
+func (a *SourceCodeAPI) Query(c *gin.Context) {
+	var params schema.SourceCodeParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	items, total, err := sourceCodeSvc.Query(ctx, params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.SourceCodeItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
+
 func (a *SourceCodeAPI) Get(c *gin.Context) {
 	var id schema.ID
 	if err := c.ShouldBindUri(&id); err != nil {
@@ -22,7 +43,7 @@ func (a *SourceCodeAPI) Get(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item, err := sourceCodeSvc.Get(ctx, id.ID)
 	if err != nil {
@@ -39,13 +60,14 @@ func (a *SourceCodeAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
-	if _, err := sourceCodeSvc.Create(ctx, &item); err != nil {
+	id, err := sourceCodeSvc.Create(ctx, &item)
+	if err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "创建成功")
+	ginx.ResSuccess(c, id)
 }
 
 func (a *SourceCodeAPI) Update(c *gin.Context) {
@@ -60,13 +82,13 @@ func (a *SourceCodeAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := sourceCodeSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 func (a *SourceCodeAPI) Delete(c *gin.Context) {
@@ -76,11 +98,11 @@ func (a *SourceCodeAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := sourceCodeSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "删除成功")
+	ginx.ResOK(c)
 }

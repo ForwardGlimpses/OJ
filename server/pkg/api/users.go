@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-
 	"github.com/ForwardGlimpses/OJ/server/pkg/errors"
 	"github.com/ForwardGlimpses/OJ/server/pkg/ginx"
 	"github.com/ForwardGlimpses/OJ/server/pkg/schema"
@@ -11,6 +9,29 @@ import (
 
 // UsersAPI 用户 API
 type UsersAPI struct{}
+
+func (a *UsersAPI) Query(c *gin.Context) {
+	var params schema.UsersParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		ginx.ResError(c, errors.InvalidInput("未找到ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	items, total, err := usersSvc.Query(ctx, params)
+	if err != nil {
+		ginx.ResError(c, err)
+		return
+	}
+
+	ginx.ResSuccess(c, schema.QueryResult[schema.UsersItems]{
+		Items:      items,
+		TotalCount: total,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
+	})
+}
 
 // Get 获取用户信息
 func (a *UsersAPI) Get(c *gin.Context) {
@@ -22,7 +43,7 @@ func (a *UsersAPI) Get(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item, err := usersSvc.Get(ctx, id.ID)
 	if err != nil {
@@ -40,7 +61,7 @@ func (a *UsersAPI) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	id, err := usersSvc.Create(ctx, item)
 	if err != nil {
@@ -59,7 +80,7 @@ func (a *UsersAPI) Register(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	item.Level = 1
 
@@ -84,13 +105,13 @@ func (a *UsersAPI) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := usersSvc.Update(ctx, id.ID, &item); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "更新成功")
+	ginx.ResOK(c)
 }
 
 // Delete 删除用户
@@ -103,11 +124,11 @@ func (a *UsersAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	if err := usersSvc.Delete(ctx, id.ID); err != nil {
 		ginx.ResError(c, err)
 		return
 	}
-	ginx.ResSuccess(c, "删除成功")
+	ginx.ResOK(c)
 }

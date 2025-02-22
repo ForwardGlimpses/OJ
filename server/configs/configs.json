@@ -9,7 +9,8 @@
   },
   "Judge": {
     "Host": "127.0.0.1",
-    "Port": 5050
+    "Port": 5050,
+    "UseHTTP": true
   },
   "Root": {
     "Email": "joesx@qq.com",

@@ -103,8 +103,12 @@ func main() {
 	submissionID := submitSolution(baseURL, token, contestID, problemID, userID, "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a + b << endl;\n}")
 	fmt.Println("提交记录:", submissionID)
 
+	params := schema.ContestSolutionParams{
+		Title: "New Contest Problem of 2025",
+	}
+
 	// 获取比赛的实时排名
-	getContestRanking(baseURL, token, contestID)
+	getContestRanking(baseURL, token, contestID, params)
 }
 func createContest(baseURL, token string, contest schema.ContestItem) int {
 	reader, err := marshalToReader(contest)
@@ -426,13 +430,20 @@ func submitSolution(baseURL, token string, contestID, problemID, userID int, inp
 	return submitResponse.Data
 }
 
-func getContestRanking(baseURL, token string, contestID int) {
+func getContestRanking(baseURL, token string, contestID int, params schema.ContestSolutionParams) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/contestSolution/%d/rank", baseURL, contestID), nil)
 	req.AddCookie(&http.Cookie{Name: "token", Value: token})
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
 	}
+
+	// 添加查询参数
+	q := req.URL.Query()
+	if params.Title != "" {
+		q.Add("title", params.Title)
+	}
+	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
